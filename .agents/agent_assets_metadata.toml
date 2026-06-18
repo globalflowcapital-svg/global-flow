@@ -6,3 +6,9 @@ id = "BM9Lf1_0EW0z0CBNciAId"
 uri = "file://landing-page-code.tar.gz"
 type = "unspecified"
 title = "Código fuente — Landing Page"
+
+[[outputs]]
+id = "6r0zmeVLQWLLME537eKUe"
+uri = "file://landing-page-editable.tar.gz"
+type = "unspecified"
+title = "Landing Page — HTML editable (.tar.gz)"
