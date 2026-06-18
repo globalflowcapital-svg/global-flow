@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: plans
+    description: Day plan generation
 paths:
   /healthz:
     get:
@@ -24,6 +26,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /plans/generate:
+    post:
+      operationId: generatePlans
+      tags: [plans]
+      summary: Generate day plans
+      description: Generates fun day plan suggestions based on weather, budget, and mood
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanInput"
+      responses:
+        "200":
+          description: Generated day plans
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlansResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +66,75 @@ components:
           type: string
       required:
         - status
-
+    PlanInput:
+      type: object
+      properties:
+        weather:
+          type: string
+          description: Current weather description (e.g. "sunny and warm", "rainy")
+        budget:
+          type: string
+          description: Budget range (e.g. "free", "under $25", "$25-$75", "$75-$150", "unlimited")
+        mood:
+          type: string
+          description: Current mood (e.g. "adventurous", "cozy", "social", "solo", "active", "creative")
+      required:
+        - weather
+        - budget
+        - mood
+    Activity:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        estimatedCost:
+          type: string
+        duration:
+          type: string
+      required:
+        - name
+        - description
+        - estimatedCost
+        - duration
+    DayPlan:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        vibe:
+          type: string
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/Activity"
+        totalEstimatedCost:
+          type: string
+        bestTimeToStart:
+          type: string
+      required:
+        - title
+        - description
+        - vibe
+        - activities
+        - totalEstimatedCost
+        - bestTimeToStart
+    PlansResponse:
+      type: object
+      properties:
+        plans:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayPlan"
+      required:
+        - plans
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
