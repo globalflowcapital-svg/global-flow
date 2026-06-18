@@ -4,6 +4,7 @@ export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoEnded, setVideoEnded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -12,22 +13,39 @@ export default function App() {
     const handleTimeUpdate = () => {
       if (video.duration > 0) {
         setProgress((video.currentTime / video.duration) * 100);
+        const remaining = Math.ceil(video.duration - video.currentTime);
+        setTimeLeft(remaining > 0 ? remaining : 0);
       }
     };
 
     const handleEnded = () => {
       setVideoEnded(true);
       setProgress(100);
+      setTimeLeft(0);
+    };
+
+    const handleLoadedMetadata = () => {
+      if (video.duration > 0) {
+        setTimeLeft(Math.ceil(video.duration));
+      }
     };
 
     video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("ended", handleEnded);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
 
     return () => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("ended", handleEnded);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, []);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   const handleCheckout = () => {
     window.location.href = "#checkout";
@@ -98,18 +116,51 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Status hint */}
-              <p
-                className="text-center mt-3 small"
-                style={{ color: videoEnded ? "#50C879" : "#666680" }}
-              >
-                {videoEnded
-                  ? "¡Video completado! El botón de compra ya está disponible."
-                  : "Mira el video completo para habilitar el botón de compra."}
-              </p>
+              {/* Countdown / status */}
+              <div className="text-center mt-4">
+                {!videoEnded ? (
+                  <div
+                    className="d-inline-flex align-items-center gap-3 px-4 py-2 rounded-pill"
+                    style={{
+                      backgroundColor: "#1a1a2a",
+                      border: "1px solid #2a2a3e",
+                    }}
+                  >
+                    <i className="bi bi-clock" style={{ color: "#50C879", fontSize: "1rem" }} />
+                    <span style={{ color: "#8888aa", fontSize: "0.85rem" }}>
+                      {timeLeft === null
+                        ? "Iniciando video…"
+                        : timeLeft === 0
+                        ? "Procesando…"
+                        : (
+                          <>
+                            El botón se habilitará en{" "}
+                            <span
+                              style={{
+                                color: "#fff",
+                                fontWeight: 700,
+                                fontVariantNumeric: "tabular-nums",
+                                minWidth: "2.8ch",
+                                display: "inline-block",
+                                textAlign: "center",
+                              }}
+                            >
+                              {formatTime(timeLeft)}
+                            </span>
+                          </>
+                        )}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="small mb-0" style={{ color: "#50C879" }}>
+                    <i className="bi bi-check-circle-fill me-2" />
+                    ¡Video completado! El botón de compra ya está disponible.
+                  </p>
+                )}
+              </div>
 
               {/* CTA Button */}
-              <div className="text-center mt-4">
+              <div className="text-center mt-3">
                 <button
                   onClick={handleCheckout}
                   disabled={!videoEnded}
