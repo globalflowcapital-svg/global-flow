@@ -12,3 +12,9 @@ id = "6r0zmeVLQWLLME537eKUe"
 uri = "file://landing-page-editable.tar.gz"
 type = "unspecified"
 title = "Landing Page — HTML editable (.tar.gz)"
+
+[[outputs]]
+id = "JMr7N1AuJyok_wory1lPh"
+uri = "file://globalflow-landing.tar.gz"
+type = "unspecified"
+title = "Global Flow — HTML editable (.tar.gz)"

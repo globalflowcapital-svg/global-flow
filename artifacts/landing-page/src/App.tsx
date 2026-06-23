@@ -1,316 +1,487 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
+
+const PAISES = [
+  { nombre: "Argentina", codigo: "+54", bandera: "🇦🇷" },
+  { nombre: "Bolivia", codigo: "+591", bandera: "🇧🇴" },
+  { nombre: "Brasil", codigo: "+55", bandera: "🇧🇷" },
+  { nombre: "Chile", codigo: "+56", bandera: "🇨🇱" },
+  { nombre: "Colombia", codigo: "+57", bandera: "🇨🇴" },
+  { nombre: "Costa Rica", codigo: "+506", bandera: "🇨🇷" },
+  { nombre: "Cuba", codigo: "+53", bandera: "🇨🇺" },
+  { nombre: "Ecuador", codigo: "+593", bandera: "🇪🇨" },
+  { nombre: "El Salvador", codigo: "+503", bandera: "🇸🇻" },
+  { nombre: "España", codigo: "+34", bandera: "🇪🇸" },
+  { nombre: "Estados Unidos", codigo: "+1", bandera: "🇺🇸" },
+  { nombre: "Guatemala", codigo: "+502", bandera: "🇬🇹" },
+  { nombre: "Honduras", codigo: "+504", bandera: "🇭🇳" },
+  { nombre: "México", codigo: "+52", bandera: "🇲🇽" },
+  { nombre: "Nicaragua", codigo: "+505", bandera: "🇳🇮" },
+  { nombre: "Panamá", codigo: "+507", bandera: "🇵🇦" },
+  { nombre: "Paraguay", codigo: "+595", bandera: "🇵🇾" },
+  { nombre: "Perú", codigo: "+51", bandera: "🇵🇪" },
+  { nombre: "República Dominicana", codigo: "+1-809", bandera: "🇩🇴" },
+  { nombre: "Uruguay", codigo: "+598", bandera: "🇺🇾" },
+  { nombre: "Venezuela", codigo: "+58", bandera: "🇻🇪" },
+];
+
+function formatTime(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, "0")}`;
+}
 
 export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoEnded, setVideoEnded] = useState(false);
+  const lastTimeRef = useRef(0);
+  const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [videoEnded, setVideoEnded] = useState(false);
+  const [muted, setMuted] = useState(false);
 
+  // Form state
+  const [nombre, setNombre] = useState("");
+  const [pais, setPais] = useState(PAISES[4]); // Colombia default
+  const [whatsapp, setWhatsapp] = useState("");
+  const [operadoCriptos, setOperadoCriptos] = useState<boolean | null>(null);
+  const [nivel, setNivel] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [paisOpen, setPaisOpen] = useState(false);
+  const [buscarPais, setBuscarPais] = useState("");
+
+  const paisesFiltrados = PAISES.filter((p) =>
+    p.nombre.toLowerCase().includes(buscarPais.toLowerCase())
+  );
+
+  // Prevent seeking forward
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleTimeUpdate = () => {
-      if (video.duration > 0) {
-        setProgress((video.currentTime / video.duration) * 100);
-        const remaining = Math.ceil(video.duration - video.currentTime);
-        setTimeLeft(remaining > 0 ? remaining : 0);
+    const onTimeUpdate = () => {
+      if (video.currentTime > lastTimeRef.current + 0.5) {
+        video.currentTime = lastTimeRef.current;
+        return;
       }
+      lastTimeRef.current = video.currentTime;
+      setCurrentTime(video.currentTime);
+      setProgress(video.duration > 0 ? (video.currentTime / video.duration) * 100 : 0);
     };
 
-    const handleEnded = () => {
-      setVideoEnded(true);
-      setProgress(100);
-      setTimeLeft(0);
-    };
+    const onLoaded = () => setDuration(video.duration);
+    const onEnded = () => { setVideoEnded(true); setProgress(100); };
+    const onPlay = () => setPlaying(true);
+    const onPause = () => setPlaying(false);
 
-    const handleLoadedMetadata = () => {
-      if (video.duration > 0) {
-        setTimeLeft(Math.ceil(video.duration));
-      }
-    };
-
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("ended", handleEnded);
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("timeupdate", onTimeUpdate);
+    video.addEventListener("loadedmetadata", onLoaded);
+    video.addEventListener("ended", onEnded);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
 
     return () => {
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("ended", handleEnded);
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("timeupdate", onTimeUpdate);
+      video.removeEventListener("loadedmetadata", onLoaded);
+      video.removeEventListener("ended", onEnded);
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
     };
   }, []);
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  };
+  const togglePlay = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) video.play();
+    else video.pause();
+  }, []);
 
-  const handleCheckout = () => {
-    window.location.href = "#checkout";
+  const toggleMute = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = !video.muted;
+    setMuted(video.muted);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (document.fullscreenElement) document.exitFullscreen();
+    else video.requestFullscreen();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoEnded) return;
+    if (!nombre.trim() || !whatsapp.trim() || operadoCriptos === null || !nivel) {
+      setError("Por favor completa todos los campos.");
+      return;
+    }
+    setError(null);
+    setEnviando(true);
+    try {
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: nombre.trim(),
+          pais: pais.nombre,
+          codigoPais: pais.codigo,
+          whatsapp: whatsapp.trim(),
+          operadoCriptos,
+          nivel,
+        }),
+      });
+      if (!res.ok) throw new Error("Error del servidor");
+      setEnviado(true);
+    } catch {
+      setError("Hubo un error al enviar. Intenta de nuevo.");
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#0d0d0d" }}>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: "#050a0e", minHeight: "100vh", color: "#fff" }}>
+      {/* BG glow effects */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: "-10%", left: "-15%", width: 700, height: 700, background: "radial-gradient(circle, rgba(0,80,160,0.18) 0%, transparent 70%)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "-10%", width: 500, height: 500, background: "radial-gradient(circle, rgba(0,180,100,0.08) 0%, transparent 70%)", borderRadius: "50%" }} />
+      </div>
 
-      {/* HEADER / TITLE */}
-      <header className="py-5 text-center" style={{ background: "linear-gradient(135deg, #0d0d0d 0%, #1a1a2e 100%)" }}>
-        <div className="container">
-          <h1
-            className="fw-bold mb-2"
-            style={{
-              fontSize: "clamp(2rem, 5vw, 3.5rem)",
-              color: "#ffffff",
-              letterSpacing: "-0.5px",
-              lineHeight: 1.15,
-            }}
-          >
-            Descubre Todo lo que Puedes Lograr
-          </h1>
-          <p className="lead mt-3" style={{ color: "#a0a0b0", maxWidth: 560, margin: "0 auto" }}>
-            Mira el video completo y desbloquea acceso exclusivo a nuestra oferta especial.
-          </p>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto", padding: "32px 16px 60px" }}>
+
+        {/* ── LOGO ── */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 72, height: 72, borderRadius: "50%", background: "linear-gradient(135deg, #003a7a 0%, #006633 100%)", border: "2px solid rgba(0,200,100,0.3)", marginBottom: 10, boxShadow: "0 0 24px rgba(0,150,255,0.25)" }}>
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+              <ellipse cx="20" cy="20" rx="17" ry="17" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+              <path d="M20 3C20 3 28 10 28 20C28 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+              <path d="M20 3C20 3 12 10 12 20C12 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+              <path d="M3 20H37" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+              <path d="M20 6C11.5 9 6 14 5 20" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+              <path d="M33 12C31 9 27 6.5 23 5.5" stroke="rgba(0,220,120,0.5)" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M33 12L29 10M33 12L31 16" stroke="rgba(0,220,120,0.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <text x="12" y="25" fill="url(#gfGrad)" fontSize="16" fontWeight="bold" fontFamily="Arial">G</text>
+              <defs>
+                <linearGradient id="gfGrad" x1="12" y1="10" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#00aaff" />
+                  <stop offset="100%" stopColor="#00e87a" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: 3, background: "linear-gradient(90deg,#fff 40%,#00e87a 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              GLOBAL FLOW
+            </div>
+            <div style={{ fontSize: "0.55rem", letterSpacing: 3, color: "#556677", marginTop: 2 }}>
+              CONECTAMOS MERCADOS · CREAMOS OPORTUNIDADES
+            </div>
+          </div>
         </div>
-      </header>
 
-      {/* VIDEO SECTION */}
-      <main className="flex-grow-1 py-5" style={{ backgroundColor: "#111118" }}>
-        <div className="container">
-          <div className="row justify-content-center">
-            <div className="col-12 col-lg-9 col-xl-8">
+        {/* ── HEADLINE ── */}
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <h1 style={{ fontSize: "clamp(1.8rem,7vw,2.6rem)", fontWeight: 900, lineHeight: 1.1, margin: "0 0 12px", letterSpacing: -0.5 }}>
+            EL <span style={{ color: "#00e87a" }}>MERCADO</span> CAMBIÓ.
+            <br />TU FORMA DE <span style={{ color: "#00e87a" }}>OPERAR</span> NO.
+          </h1>
+          <p style={{ color: "#8899aa", fontSize: "0.95rem", margin: 0 }}>Mira el video y entiende por qué.</p>
+        </div>
 
-              {/* Video wrapper */}
-              <div
-                className="position-relative rounded-4 overflow-hidden"
-                style={{
-                  boxShadow: "0 0 60px rgba(80, 200, 121, 0.15), 0 20px 60px rgba(0,0,0,0.6)",
-                  border: "1px solid rgba(80, 200, 121, 0.2)",
-                }}
-              >
-                <video
-                  ref={videoRef}
-                  className="w-100 d-block"
-                  controls
-                  controlsList="nodownload"
-                  style={{ maxHeight: "520px", objectFit: "cover", backgroundColor: "#000" }}
-                  poster="https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=1280&q=80"
-                >
-                  <source
-                    src="https://www.w3schools.com/html/mov_bbb.mp4"
-                    type="video/mp4"
-                  />
-                  Tu navegador no soporta la reproducción de video.
-                </video>
+        {/* ── CUSTOM VIDEO PLAYER ── */}
+        <div style={{ borderRadius: 14, overflow: "hidden", background: "#0d1117", border: "1px solid rgba(0,150,255,0.15)", boxShadow: "0 0 40px rgba(0,100,200,0.12)", marginBottom: 24 }}>
+          {/* No-skip badge */}
+          <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", color: "#ccd" }}>
+              🔒 Vídeo no saltable
+            </span>
+          </div>
 
-                {/* Progress bar below video */}
-                <div style={{ height: 4, backgroundColor: "#1e1e2e" }}>
-                  <div
-                    style={{
-                      height: "100%",
-                      width: `${progress}%`,
-                      backgroundColor: "#50C879",
-                      transition: "width 0.3s ease",
-                    }}
-                  />
+          {/* Video element — hidden native controls */}
+          <div style={{ position: "relative", background: "#000", cursor: "pointer" }} onClick={togglePlay}>
+            <video
+              ref={videoRef}
+              style={{ width: "100%", display: "block", maxHeight: 300, objectFit: "cover" }}
+              poster="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&q=80"
+              playsInline
+            >
+              <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+            </video>
+            {/* Play overlay */}
+            {!playing && !videoEnded && (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.25)", pointerEvents: "none" }}>
+                <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "2px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            )}
+            {videoEnded && (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", pointerEvents: "none" }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ color: "#00e87a", fontSize: "2rem" }}>✓</div>
+                  <div style={{ color: "#fff", fontSize: "0.85rem", fontWeight: 600 }}>Video completado</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Custom controls bar */}
+          <div style={{ background: "#0d1117", padding: "8px 14px" }}>
+            {/* Progress bar (read-only, no click) */}
+            <div style={{ height: 3, background: "#1e2a35", borderRadius: 2, marginBottom: 8, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg,#00aaff,#00e87a)", borderRadius: 2, transition: "width 0.4s ease" }} />
+            </div>
+            {/* Buttons row */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button onClick={togglePlay} style={{ background: "none", border: "none", color: "#ccd", cursor: "pointer", padding: 2, lineHeight: 0 }}>
+                {playing
+                  ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
+                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                }
+              </button>
+              <span style={{ fontSize: "0.72rem", color: "#8899aa", fontVariantNumeric: "tabular-nums" }}>
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
+              <div style={{ flex: 1 }} />
+              <button onClick={toggleMute} style={{ background: "none", border: "none", color: "#ccd", cursor: "pointer", padding: 2, lineHeight: 0 }}>
+                {muted
+                  ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97V10.18L16.45 12.63C16.48 12.43 16.5 12.21 16.5 12zM19 12C19 12.94 18.8 13.82 18.46 14.64L19.97 16.15C20.62 14.91 21 13.5 21 12C21 7.72 18.01 4.14 14 3.23V5.29C16.89 6.15 19 8.83 19 12zM4.27 3L3 4.27L7.73 9H3v6h4l5 5v-6.73l4.25 4.25C12.87 17.82 11.98 18.08 11 18.08c-1.38 0-2.63-.45-3.64-1.19L6 18.26C7.34 19.34 9.1 20 11 20c1.26 0 2.44-.3 3.48-.82L16.73 21.5L18 20.23L11 13.23L4.27 3zM11 5l-2.17 2.17L11 9.34V5z"/></svg>
+                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                }
+              </button>
+              <button onClick={toggleFullscreen} style={{ background: "none", border: "none", color: "#ccd", cursor: "pointer", padding: 2, lineHeight: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── FORM CARD ── */}
+        <div style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 24px" }}>
+          {enviado ? (
+            <div style={{ textAlign: "center", padding: "40px 0" }}>
+              <div style={{ fontSize: "3rem", marginBottom: 16 }}>🎉</div>
+              <h2 style={{ color: "#00e87a", fontWeight: 800, marginBottom: 8 }}>¡Registro exitoso!</h2>
+              <p style={{ color: "#8899aa" }}>Pronto recibirás acceso al grupo por WhatsApp.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              {/* Form title */}
+              <div style={{ textAlign: "center", marginBottom: 22 }}>
+                <div style={{ fontSize: "1.2rem", fontWeight: 800, letterSpacing: 1 }}>
+                  <span style={{ marginRight: 8 }}>👥</span>ACCESO AL GRUPO
+                </div>
+                <div style={{ color: "#8899aa", fontSize: "0.85rem", marginTop: 4 }}>
+                  Completa tus datos para entrar al grupo.
                 </div>
               </div>
 
-              {/* Countdown / status */}
-              <div className="text-center mt-4">
-                {!videoEnded ? (
-                  <div
-                    className="d-inline-flex align-items-center gap-3 px-4 py-2 rounded-pill"
-                    style={{
-                      backgroundColor: "#1a1a2a",
-                      border: "1px solid #2a2a3e",
-                    }}
-                  >
-                    <i className="bi bi-clock" style={{ color: "#50C879", fontSize: "1rem" }} />
-                    <span style={{ color: "#8888aa", fontSize: "0.85rem" }}>
-                      {timeLeft === null
-                        ? "Iniciando video…"
-                        : timeLeft === 0
-                        ? "Procesando…"
-                        : (
-                          <>
-                            El botón se habilitará en{" "}
-                            <span
-                              style={{
-                                color: "#fff",
-                                fontWeight: 700,
-                                fontVariantNumeric: "tabular-nums",
-                                minWidth: "2.8ch",
-                                display: "inline-block",
-                                textAlign: "center",
-                              }}
-                            >
-                              {formatTime(timeLeft)}
-                            </span>
-                          </>
-                        )}
-                    </span>
+              {/* Overlay when video not finished */}
+              {!videoEnded && (
+                <div style={{ position: "relative" }}>
+                  <div style={{ filter: "blur(2px) opacity(0.35)", pointerEvents: "none" }}>
+                    <FormFields
+                      nombre={nombre} setNombre={setNombre}
+                      pais={pais} setPais={setPais}
+                      paisOpen={false} setPaisOpen={() => {}}
+                      buscarPais={buscarPais} setBuscarPais={setBuscarPais}
+                      paisesFiltrados={paisesFiltrados}
+                      whatsapp={whatsapp} setWhatsapp={setWhatsapp}
+                      operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
+                      nivel={nivel} setNivel={setNivel}
+                      disabled={true}
+                    />
                   </div>
-                ) : (
-                  <p className="small mb-0" style={{ color: "#50C879" }}>
-                    <i className="bi bi-check-circle-fill me-2" />
-                    ¡Video completado! El botón de compra ya está disponible.
-                  </p>
-                )}
-              </div>
-
-              {/* CTA Button */}
-              <div className="text-center mt-3">
-                <button
-                  onClick={handleCheckout}
-                  disabled={!videoEnded}
-                  className="btn btn-lg px-5 py-3 fw-semibold rounded-pill"
-                  style={{
-                    backgroundColor: videoEnded ? "#50C879" : "#2a2a3a",
-                    color: videoEnded ? "#fff" : "#555570",
-                    border: videoEnded ? "none" : "1px solid #333350",
-                    fontSize: "1.1rem",
-                    letterSpacing: "0.3px",
-                    cursor: videoEnded ? "pointer" : "not-allowed",
-                    transition: "all 0.3s ease",
-                    boxShadow: videoEnded ? "0 8px 30px rgba(80, 200, 121, 0.35)" : "none",
-                    transform: videoEnded ? "translateY(0)" : "none",
-                  }}
-                >
-                  {videoEnded ? (
-                    <>
-                      <i className="bi bi-bag-check-fill me-2" />
-                      Ir al Checkout
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-lock-fill me-2" />
-                      Mira el video para continuar
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Features row */}
-              <div className="row g-3 mt-5 text-center">
-                {[
-                  { icon: "bi-shield-check", label: "Pago Seguro" },
-                  { icon: "bi-arrow-counterclockwise", label: "Garantía 30 días" },
-                  { icon: "bi-headset", label: "Soporte 24/7" },
-                ].map((f) => (
-                  <div className="col-4" key={f.label}>
-                    <div
-                      className="rounded-3 py-3 px-2"
-                      style={{ backgroundColor: "#1a1a2a", border: "1px solid #2a2a3e" }}
-                    >
-                      <i className={`${f.icon} fs-4 d-block mb-1`} style={{ color: "#50C879" }} />
-                      <small style={{ color: "#8888aa", fontSize: "0.78rem" }}>{f.label}</small>
-                    </div>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                    <div style={{ fontSize: "2rem" }}>🔒</div>
+                    <div style={{ fontWeight: 700, color: "#ccd" }}>Mira el video completo</div>
+                    <div style={{ fontSize: "0.8rem", color: "#8899aa" }}>para desbloquear el formulario</div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
 
-            </div>
-          </div>
+              {videoEnded && (
+                <FormFields
+                  nombre={nombre} setNombre={setNombre}
+                  pais={pais} setPais={setPais}
+                  paisOpen={paisOpen} setPaisOpen={setPaisOpen}
+                  buscarPais={buscarPais} setBuscarPais={setBuscarPais}
+                  paisesFiltrados={paisesFiltrados}
+                  whatsapp={whatsapp} setWhatsapp={setWhatsapp}
+                  operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
+                  nivel={nivel} setNivel={setNivel}
+                  disabled={false}
+                />
+              )}
+
+              {error && (
+                <div style={{ background: "rgba(220,50,50,0.15)", border: "1px solid rgba(220,50,50,0.3)", borderRadius: 8, padding: "10px 14px", fontSize: "0.83rem", color: "#ff8888", marginTop: 12 }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={!videoEnded || enviando}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", marginTop: 20, padding: "16px 24px",
+                  borderRadius: 10, border: "none", fontWeight: 800, fontSize: "1rem", letterSpacing: 1,
+                  cursor: videoEnded && !enviando ? "pointer" : "not-allowed",
+                  background: videoEnded
+                    ? (enviando ? "rgba(0,180,80,0.5)" : "linear-gradient(90deg,#00c060,#00e87a)")
+                    : "rgba(255,255,255,0.05)",
+                  color: videoEnded ? "#fff" : "#445566",
+                  transition: "all 0.3s ease",
+                  boxShadow: videoEnded ? "0 4px 24px rgba(0,200,100,0.3)" : "none",
+                }}
+              >
+                <span>{enviando ? "Enviando..." : "ENTRAR AL GRUPO"}</span>
+                <span style={{ fontSize: "1.2rem" }}>→</span>
+              </button>
+            </form>
+          )}
         </div>
-      </main>
 
-      {/* FOOTER */}
-      <footer style={{ backgroundColor: "#0a0a12", borderTop: "1px solid #1e1e30" }}>
-        <div className="container py-5">
-          <div className="row gy-4 align-items-center">
+      </div>
+    </div>
+  );
+}
 
-            {/* Brand */}
-            <div className="col-12 col-md-4 text-center text-md-start">
-              <span className="fw-bold fs-5" style={{ color: "#ffffff" }}>
-                <i className="bi bi-play-circle-fill me-2" style={{ color: "#50C879" }} />
-                MiMarca
-              </span>
-              <p className="mt-2 mb-0 small" style={{ color: "#666680" }}>
-                Transformando vidas a través del conocimiento.
-              </p>
-            </div>
+// ── Sub-component: form fields ──
+interface FormFieldsProps {
+  nombre: string; setNombre: (v: string) => void;
+  pais: typeof PAISES[0]; setPais: (v: typeof PAISES[0]) => void;
+  paisOpen: boolean; setPaisOpen: (v: boolean) => void;
+  buscarPais: string; setBuscarPais: (v: string) => void;
+  paisesFiltrados: typeof PAISES;
+  whatsapp: string; setWhatsapp: (v: string) => void;
+  operadoCriptos: boolean | null; setOperadoCriptos: (v: boolean) => void;
+  nivel: string | null; setNivel: (v: string) => void;
+  disabled: boolean;
+}
 
-            {/* Social links */}
-            <div className="col-12 col-md-4 text-center">
-              <p className="text-uppercase small fw-semibold mb-3" style={{ color: "#50C879", letterSpacing: "1.5px" }}>
-                Síguenos
-              </p>
-              <div className="d-flex justify-content-center gap-3">
-                {[
-                  { icon: "bi-instagram", href: "#", label: "Instagram" },
-                  { icon: "bi-facebook", href: "#", label: "Facebook" },
-                  { icon: "bi-twitter-x", href: "#", label: "X / Twitter" },
-                  { icon: "bi-youtube", href: "#", label: "YouTube" },
-                  { icon: "bi-tiktok", href: "#", label: "TikTok" },
-                ].map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    aria-label={s.label}
-                    title={s.label}
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      backgroundColor: "#1a1a2a",
-                      border: "1px solid #2a2a3e",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#8888aa",
-                      textDecoration: "none",
-                      transition: "all 0.25s ease",
-                      fontSize: "1.1rem",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.backgroundColor = "#50C879";
-                      (e.currentTarget as HTMLElement).style.borderColor = "#50C879";
-                      (e.currentTarget as HTMLElement).style.color = "#fff";
-                      (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.backgroundColor = "#1a1a2a";
-                      (e.currentTarget as HTMLElement).style.borderColor = "#2a2a3e";
-                      (e.currentTarget as HTMLElement).style.color = "#8888aa";
-                      (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                    }}
+function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, buscarPais, setBuscarPais, paisesFiltrados, whatsapp, setWhatsapp, operadoCriptos, setOperadoCriptos, nivel, setNivel, disabled }: FormFieldsProps) {
+  const inputStyle: React.CSSProperties = {
+    width: "100%", background: "#0a1520", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
+    color: "#ddeeff", padding: "12px 14px", fontSize: "0.9rem", outline: "none",
+    boxSizing: "border-box",
+  };
+
+  const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: "11px 8px", borderRadius: 8, border: active ? "1.5px solid #00e87a" : "1px solid rgba(255,255,255,0.1)",
+    background: active ? "rgba(0,220,120,0.12)" : "rgba(255,255,255,0.03)",
+    color: active ? "#00e87a" : "#8899aa", fontWeight: 600, fontSize: "0.88rem", cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.2s",
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Name */}
+      <div style={{ position: "relative" }}>
+        <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#8899aa" }}>👤</span>
+        <input
+          type="text"
+          placeholder="Nombre y apellido"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          disabled={disabled}
+          style={{ ...inputStyle, paddingLeft: 36 }}
+        />
+      </div>
+
+      {/* Country + WhatsApp */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {/* Country dropdown */}
+        <div style={{ position: "relative" }}>
+          <button
+            type="button"
+            onClick={() => !disabled && setPaisOpen(!paisOpen)}
+            style={{ ...inputStyle, display: "flex", alignItems: "center", gap: 8, cursor: disabled ? "not-allowed" : "pointer" }}
+          >
+            <span style={{ fontSize: "0.85rem", color: "#8899aa" }}>🔍</span>
+            <span style={{ fontSize: "1rem" }}>{pais.bandera}</span>
+            <span style={{ fontSize: "0.85rem", color: "#ddeeff" }}>{pais.nombre.length > 9 ? pais.nombre.slice(0, 9) + "…" : pais.nombre} {pais.codigo}</span>
+            <span style={{ marginLeft: "auto", color: "#556677", fontSize: "0.7rem" }}>▾</span>
+          </button>
+          {paisOpen && !disabled && (
+            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0f1923", border: "1px solid rgba(0,200,100,0.2)", borderRadius: 8, zIndex: 50, maxHeight: 220, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+              <div style={{ padding: "8px 8px 4px" }}>
+                <input
+                  placeholder="Buscar país..."
+                  value={buscarPais}
+                  onChange={(e) => setBuscarPais(e.target.value)}
+                  style={{ ...inputStyle, fontSize: "0.8rem", padding: "7px 10px" }}
+                  autoFocus
+                />
+              </div>
+              <div style={{ overflowY: "auto", maxHeight: 160 }}>
+                {paisesFiltrados.map((p) => (
+                  <button
+                    key={p.nombre}
+                    type="button"
+                    onClick={() => { setPais(p); setPaisOpen(false); setBuscarPais(""); }}
+                    style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", background: "none", border: "none", color: "#ddeeff", fontSize: "0.83rem", cursor: "pointer", textAlign: "left" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,220,100,0.08)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                   >
-                    <i className={s.icon} />
-                  </a>
+                    <span>{p.bandera}</span><span>{p.nombre}</span><span style={{ marginLeft: "auto", color: "#556677" }}>{p.codigo}</span>
+                  </button>
                 ))}
               </div>
             </div>
-
-            {/* Legal */}
-            <div className="col-12 col-md-4 text-center text-md-end">
-              <div className="d-flex flex-column gap-1">
-                {["Términos y Condiciones", "Política de Privacidad", "Contacto"].map((link) => (
-                  <a
-                    key={link}
-                    href="#"
-                    className="small"
-                    style={{ color: "#555570", textDecoration: "none", transition: "color 0.2s" }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#50C879")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#555570")}
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-          </div>
-
-          {/* Copyright */}
-          <div className="text-center pt-4 mt-4" style={{ borderTop: "1px solid #1a1a28" }}>
-            <small style={{ color: "#444458" }}>
-              &copy; {new Date().getFullYear()} MiMarca. Todos los derechos reservados.
-            </small>
-          </div>
+          )}
         </div>
-      </footer>
+        {/* WhatsApp */}
+        <div style={{ position: "relative" }}>
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: "1rem" }}>💬</span>
+          <input
+            type="tel"
+            placeholder="Número de WhatsApp"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            disabled={disabled}
+            style={{ ...inputStyle, paddingLeft: 36 }}
+          />
+        </div>
+      </div>
 
+      {/* Crypto experience */}
+      <div>
+        <div style={{ fontSize: "0.85rem", color: "#ccd", marginBottom: 8, fontWeight: 600 }}>¿Has operado con criptomonedas?</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button type="button" disabled={disabled} onClick={() => setOperadoCriptos(true)} style={toggleBtnStyle(operadoCriptos === true)}>
+            <span>✓</span> Sí
+          </button>
+          <button type="button" disabled={disabled} onClick={() => setOperadoCriptos(false)} style={toggleBtnStyle(operadoCriptos === false)}>
+            <span>○</span> No
+          </button>
+        </div>
+      </div>
+
+      {/* Level */}
+      <div>
+        <div style={{ fontSize: "0.85rem", color: "#ccd", marginBottom: 8, fontWeight: 600 }}>¿Qué nivel consideras que tienes?</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {["principiante", "intermedio", "avanzado"].map((n) => (
+            <button
+              key={n}
+              type="button"
+              disabled={disabled}
+              onClick={() => setNivel(n)}
+              style={toggleBtnStyle(nivel === n)}
+            >
+              <span style={{ fontSize: "0.75rem" }}>📊</span>
+              {n.charAt(0).toUpperCase() + n.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
