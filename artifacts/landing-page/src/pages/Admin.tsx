@@ -143,7 +143,7 @@ export default function Admin() {
     setError(null);
     try {
       const res = await fetch("/api/leads", {
-        headers: { Authorization: `Bearer ${password}` },
+        headers: { Authorization: `Bearer ${ADMIN_PASSWORD}` },
       });
       if (res.status === 401) throw new Error("Contraseña incorrecta");
       if (!res.ok) throw new Error("Error " + res.status);
