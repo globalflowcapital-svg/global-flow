@@ -46,6 +46,7 @@ export default function App() {
   const [whatsapp, setWhatsapp] = useState("");
   const [operadoCriptos, setOperadoCriptos] = useState<boolean | null>(null);
   const [nivel, setNivel] = useState<string | null>(null);
+  const [fuente, setFuente] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +116,7 @@ export default function App() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoEnded) return;
-    if (!nombre.trim() || !whatsapp.trim() || operadoCriptos === null || !nivel) {
+    if (!nombre.trim() || !whatsapp.trim() || operadoCriptos === null || !nivel || !fuente) {
       setError("Por favor completa todos los campos.");
       return;
     }
@@ -132,6 +133,7 @@ export default function App() {
           whatsapp: whatsapp.trim(),
           operadoCriptos,
           nivel,
+          fuente,
         }),
       });
       if (!res.ok) throw new Error("Error del servidor");
@@ -148,43 +150,23 @@ export default function App() {
   };
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", background: "#050a0e", minHeight: "100vh", color: "#fff" }}>
-      {/* BG glow effects */}
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: "-10%", left: "-15%", width: 700, height: 700, background: "radial-gradient(circle, rgba(0,80,160,0.18) 0%, transparent 70%)", borderRadius: "50%" }} />
-        <div style={{ position: "absolute", bottom: "10%", right: "-10%", width: 500, height: 500, background: "radial-gradient(circle, rgba(0,180,100,0.08) 0%, transparent 70%)", borderRadius: "50%" }} />
-      </div>
+    <div style={{ fontFamily: "'Inter', sans-serif", background: "#000", minHeight: "100vh", color: "#fff" }}>
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto", padding: "32px 16px 60px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 520, margin: "0 auto", padding: "28px 16px 60px" }}>
 
         {/* ── LOGO ── */}
-        <div style={{ textAlign: "center", marginBottom: 24 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 72, height: 72, borderRadius: "50%", background: "linear-gradient(135deg, #003a7a 0%, #006633 100%)", border: "2px solid rgba(0,200,100,0.3)", marginBottom: 10, boxShadow: "0 0 24px rgba(0,150,255,0.25)" }}>
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <ellipse cx="20" cy="20" rx="17" ry="17" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <path d="M20 3C20 3 28 10 28 20C28 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-              <path d="M20 3C20 3 12 10 12 20C12 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-              <path d="M3 20H37" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <path d="M20 6C11.5 9 6 14 5 20" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-              <path d="M33 12C31 9 27 6.5 23 5.5" stroke="rgba(0,220,120,0.5)" strokeWidth="1.5" strokeLinecap="round" />
-              <path d="M33 12L29 10M33 12L31 16" stroke="rgba(0,220,120,0.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <text x="12" y="25" fill="url(#gfGrad)" fontSize="16" fontWeight="bold" fontFamily="Arial">G</text>
-              <defs>
-                <linearGradient id="gfGrad" x1="12" y1="10" x2="28" y2="26" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#00aaff" />
-                  <stop offset="100%" stopColor="#00e87a" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: 3, background: "linear-gradient(90deg,#fff 40%,#00e87a 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              GLOBAL FLOW
-            </div>
-            <div style={{ fontSize: "0.55rem", letterSpacing: 3, color: "#556677", marginTop: 2 }}>
-              CONECTAMOS MERCADOS · CREAMOS OPORTUNIDADES
-            </div>
-          </div>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <img
+            src={`${import.meta.env.BASE_URL}logo.jpg`}
+            alt="Global Flow"
+            style={{
+              width: "min(72vw, 280px)",
+              height: "auto",
+              display: "block",
+              margin: "0 auto",
+              borderRadius: 12,
+            }}
+          />
         </div>
 
         {/* ── HEADLINE ── */}
@@ -293,6 +275,7 @@ export default function App() {
                       whatsapp={whatsapp} setWhatsapp={setWhatsapp}
                       operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
                       nivel={nivel} setNivel={setNivel}
+                      fuente={fuente} setFuente={setFuente}
                       disabled={true}
                     />
                   </div>
@@ -314,6 +297,7 @@ export default function App() {
                   whatsapp={whatsapp} setWhatsapp={setWhatsapp}
                   operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
                   nivel={nivel} setNivel={setNivel}
+                  fuente={fuente} setFuente={setFuente}
                   disabled={false}
                 />
               )}
@@ -399,6 +383,17 @@ function SuccessRedirect() {
 }
 
 // ── Sub-component: form fields ──
+const FUENTES = [
+  { value: "instagram",  label: "📸 Instagram" },
+  { value: "tiktok",     label: "🎵 TikTok" },
+  { value: "facebook",   label: "👤 Facebook" },
+  { value: "youtube",    label: "▶️ YouTube" },
+  { value: "referido",   label: "🤝 Referido / amigo" },
+  { value: "twitter",    label: "🐦 Twitter / X" },
+  { value: "whatsapp",   label: "💬 WhatsApp" },
+  { value: "otro",       label: "🔍 Otro" },
+];
+
 interface FormFieldsProps {
   nombre: string; setNombre: (v: string) => void;
   pais: typeof PAISES[0]; setPais: (v: typeof PAISES[0]) => void;
@@ -408,10 +403,11 @@ interface FormFieldsProps {
   whatsapp: string; setWhatsapp: (v: string) => void;
   operadoCriptos: boolean | null; setOperadoCriptos: (v: boolean) => void;
   nivel: string | null; setNivel: (v: string) => void;
+  fuente: string | null; setFuente: (v: string) => void;
   disabled: boolean;
 }
 
-function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, buscarPais, setBuscarPais, paisesFiltrados, whatsapp, setWhatsapp, operadoCriptos, setOperadoCriptos, nivel, setNivel, disabled }: FormFieldsProps) {
+function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, buscarPais, setBuscarPais, paisesFiltrados, whatsapp, setWhatsapp, operadoCriptos, setOperadoCriptos, nivel, setNivel, fuente, setFuente, disabled }: FormFieldsProps) {
   const inputStyle: React.CSSProperties = {
     width: "100%", background: "#0a1520", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
     color: "#ddeeff", padding: "12px 14px", fontSize: "0.9rem", outline: "none",
@@ -523,6 +519,31 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
             >
               <span style={{ fontSize: "0.75rem" }}>📊</span>
               {n.charAt(0).toUpperCase() + n.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Traffic source */}
+      <div>
+        <div style={{ fontSize: "0.85rem", color: "#ccd", marginBottom: 8, fontWeight: 600 }}>¿Cómo nos encontraste?</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {FUENTES.map((f) => (
+            <button
+              key={f.value}
+              type="button"
+              disabled={disabled}
+              onClick={() => setFuente(f.value)}
+              style={{
+                padding: "10px 8px", borderRadius: 8,
+                border: fuente === f.value ? "1.5px solid #00e87a" : "1px solid rgba(255,255,255,0.1)",
+                background: fuente === f.value ? "rgba(0,220,120,0.12)" : "rgba(255,255,255,0.03)",
+                color: fuente === f.value ? "#00e87a" : "#8899aa",
+                fontWeight: 600, fontSize: "0.83rem", cursor: disabled ? "not-allowed" : "pointer",
+                textAlign: "left", transition: "all 0.2s",
+              }}
+            >
+              {f.label}
             </button>
           ))}
         </div>

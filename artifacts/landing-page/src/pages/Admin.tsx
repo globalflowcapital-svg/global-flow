@@ -12,6 +12,7 @@ interface Lead {
   whatsapp: string;
   operadoCriptos: boolean;
   nivel: string;
+  fuente: string | null;
   createdAt: string;
 }
 
@@ -23,7 +24,7 @@ const PURPLE = "#9966ff";
 const ORANGE = "#ff9933";
 
 function exportCSV(leads: Lead[]) {
-  const headers = ["ID", "Nombre", "País", "Código", "WhatsApp", "Operó Criptos", "Nivel", "Fecha"];
+  const headers = ["ID", "Nombre", "País", "Código", "WhatsApp", "Operó Criptos", "Nivel", "Fuente", "Fecha"];
   const rows = leads.map((l) => [
     l.id,
     `"${l.nombre}"`,
@@ -32,6 +33,7 @@ function exportCSV(leads: Lead[]) {
     l.whatsapp,
     l.operadoCriptos ? "Sí" : "No",
     l.nivel,
+    l.fuente ?? "—",
     new Date(l.createdAt).toLocaleString("es-CO"),
   ]);
   const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -296,7 +298,7 @@ export default function Admin() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.83rem" }}>
                     <thead>
                       <tr style={{ background: "#0a1520", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        {["#", "Nombre", "País", "WhatsApp", "Criptos", "Nivel", "Fecha"].map((h) => (
+                        {["#", "Nombre", "País", "WhatsApp", "Criptos", "Nivel", "Fuente", "Fecha"].map((h) => (
                           <th key={h} style={{ padding: "12px 14px", textAlign: "left", color: "#8899aa", fontWeight: 600, whiteSpace: "nowrap", letterSpacing: 0.3 }}>{h}</th>
                         ))}
                       </tr>
@@ -320,6 +322,12 @@ export default function Admin() {
                           </td>
                           <td style={{ padding: "11px 14px" }}>
                             <span style={{ background: "rgba(0,150,255,0.1)", border: "1px solid rgba(0,150,255,0.2)", borderRadius: 6, padding: "3px 9px", color: "#66aaff", fontSize: "0.78rem", fontWeight: 600, textTransform: "capitalize" }}>{lead.nivel}</span>
+                          </td>
+                          <td style={{ padding: "11px 14px" }}>
+                            {lead.fuente
+                              ? <span style={{ background: "rgba(153,102,255,0.1)", border: "1px solid rgba(153,102,255,0.25)", borderRadius: 6, padding: "3px 9px", color: "#bb99ff", fontSize: "0.78rem", fontWeight: 600, textTransform: "capitalize", whiteSpace: "nowrap" }}>{lead.fuente}</span>
+                              : <span style={{ color: "#334455", fontSize: "0.78rem" }}>—</span>
+                            }
                           </td>
                           <td style={{ padding: "11px 14px", color: "#556677", whiteSpace: "nowrap", fontSize: "0.78rem" }}>
                             {new Date(lead.createdAt).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })}

@@ -10,9 +10,12 @@ export const leadsTable = pgTable("leads", {
   whatsapp: text("whatsapp").notNull(),
   operadoCriptos: boolean("operado_criptos").notNull(),
   nivel: text("nivel").notNull(),
+  fuente: text("fuente"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertLeadSchema = createInsertSchema(leadsTable).omit({ id: true, createdAt: true });
+export const insertLeadSchema = createInsertSchema(leadsTable)
+  .omit({ id: true, createdAt: true })
+  .partial({ fuente: true });
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leadsTable.$inferSelect;
