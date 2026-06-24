@@ -137,21 +137,54 @@ export default function Admin() {
   const [filterCriptos, setFilterCriptos] = useState("todos");
   const [sortDesc, setSortDesc] = useState(true);
   const [tab, setTab] = useState<"tabla" | "graficas">("tabla");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  const authHeaders = { Authorization: `Bearer ${ADMIN_PASSWORD}` };
 
   const fetchLeads = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/leads", {
-        headers: { Authorization: `Bearer ${ADMIN_PASSWORD}` },
-      });
+      const res = await fetch("/api/leads", { headers: authHeaders });
       if (res.status === 401) throw new Error("Contraseña incorrecta");
       if (!res.ok) throw new Error("Error " + res.status);
       setLeads(await res.json());
+      setSelected(new Set());
     } catch {
       setError("No se pudo conectar con la API.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const deleteLead = async (id: number) => {
+    if (!confirm("¿Eliminar este lead?")) return;
+    try {
+      await fetch(`/api/leads/${id}`, { method: "DELETE", headers: authHeaders });
+      setLeads((prev) => prev.filter((l) => l.id !== id));
+      setSelected((prev) => { const s = new Set(prev); s.delete(id); return s; });
+    } catch {
+      alert("Error al eliminar el lead.");
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+    if (!confirm(`¿Eliminar ${selected.size} lead${selected.size > 1 ? "s" : ""}? Esta acción no se puede deshacer.`)) return;
+    setDeleting(true);
+    try {
+      await fetch("/api/leads", {
+        method: "DELETE",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      setLeads((prev) => prev.filter((l) => !selected.has(l.id)));
+      setSelected(new Set());
+    } catch {
+      alert("Error al eliminar los leads seleccionados.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -206,6 +239,33 @@ export default function Admin() {
 
   const nivelMayor = Object.entries(nivelCount).sort((a, b) => b[1] - a[1])[0];
   const paisTop = Object.entries(paisCount).sort((a, b) => b[1] - a[1])[0];
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every((l) => selected.has(l.id));
+  const someSelected = selected.size > 0;
+
+  const toggleSelect = (id: number) => {
+    setSelected((prev) => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelected((prev) => {
+        const s = new Set(prev);
+        filtered.forEach((l) => s.delete(l.id));
+        return s;
+      });
+    } else {
+      setSelected((prev) => {
+        const s = new Set(prev);
+        filtered.forEach((l) => s.add(l.id));
+        return s;
+      });
+    }
+  };
 
   return (
     <div style={{ minHeight: "100vh", background: "#050a0e", fontFamily: "'Inter',sans-serif", color: "#fff" }}>

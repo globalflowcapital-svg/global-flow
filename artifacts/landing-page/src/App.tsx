@@ -154,21 +154,6 @@ export default function App() {
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 520, margin: "0 auto", padding: "28px 16px 60px" }}>
 
-        {/* ── LOGO ── */}
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <img
-            src={`${import.meta.env.BASE_URL}logo.jpg`}
-            alt="Global Flow"
-            style={{
-              width: "min(72vw, 280px)",
-              height: "auto",
-              display: "block",
-              margin: "0 auto",
-              borderRadius: 12,
-            }}
-          />
-        </div>
-
         {/* ── HEADLINE ── */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <h1 style={{ fontSize: "clamp(1.8rem,7vw,2.6rem)", fontWeight: 900, lineHeight: 1.1, margin: "0 0 12px", letterSpacing: -0.5 }}>
