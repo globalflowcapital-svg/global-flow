@@ -21,7 +21,14 @@ router.post("/leads", async (req, res) => {
   }
 });
 
-router.get("/leads", async (_req, res) => {
+router.get("/leads", async (req, res) => {
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "globalflow2024";
+  const auth = req.headers["authorization"] ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  if (token !== ADMIN_PASSWORD) {
+    res.status(401).json({ error: "No autorizado" });
+    return;
+  }
   try {
     const rows = await db.select().from(leadsTable).orderBy(leadsTable.createdAt);
     res.json(rows);
