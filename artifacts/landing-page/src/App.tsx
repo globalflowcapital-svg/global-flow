@@ -115,7 +115,6 @@ export default function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!videoEnded) return;
     if (!nombre.trim() || !whatsapp.trim() || operadoCriptos === null || !nivel || !fuente) {
       setError("Por favor completa todos los campos.");
       return;
@@ -247,45 +246,18 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Overlay when video not finished */}
-              {!videoEnded && (
-                <div style={{ position: "relative" }}>
-                  <div style={{ filter: "blur(2px) opacity(0.35)", pointerEvents: "none" }}>
-                    <FormFields
-                      nombre={nombre} setNombre={setNombre}
-                      pais={pais} setPais={setPais}
-                      paisOpen={false} setPaisOpen={() => {}}
-                      buscarPais={buscarPais} setBuscarPais={setBuscarPais}
-                      paisesFiltrados={paisesFiltrados}
-                      whatsapp={whatsapp} setWhatsapp={setWhatsapp}
-                      operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
-                      nivel={nivel} setNivel={setNivel}
-                      fuente={fuente} setFuente={setFuente}
-                      disabled={true}
-                    />
-                  </div>
-                  <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
-                    <div style={{ fontSize: "2rem" }}>🔒</div>
-                    <div style={{ fontWeight: 700, color: "#ccd" }}>Mira el video completo</div>
-                    <div style={{ fontSize: "0.8rem", color: "#8899aa" }}>para desbloquear el formulario</div>
-                  </div>
-                </div>
-              )}
-
-              {videoEnded && (
-                <FormFields
-                  nombre={nombre} setNombre={setNombre}
-                  pais={pais} setPais={setPais}
-                  paisOpen={paisOpen} setPaisOpen={setPaisOpen}
-                  buscarPais={buscarPais} setBuscarPais={setBuscarPais}
-                  paisesFiltrados={paisesFiltrados}
-                  whatsapp={whatsapp} setWhatsapp={setWhatsapp}
-                  operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
-                  nivel={nivel} setNivel={setNivel}
-                  fuente={fuente} setFuente={setFuente}
-                  disabled={false}
-                />
-              )}
+              <FormFields
+                nombre={nombre} setNombre={setNombre}
+                pais={pais} setPais={setPais}
+                paisOpen={paisOpen} setPaisOpen={setPaisOpen}
+                buscarPais={buscarPais} setBuscarPais={setBuscarPais}
+                paisesFiltrados={paisesFiltrados}
+                whatsapp={whatsapp} setWhatsapp={setWhatsapp}
+                operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
+                nivel={nivel} setNivel={setNivel}
+                fuente={fuente} setFuente={setFuente}
+                disabled={false}
+              />
 
               {error && (
                 <div style={{ background: "rgba(220,50,50,0.15)", border: "1px solid rgba(220,50,50,0.3)", borderRadius: 8, padding: "10px 14px", fontSize: "0.83rem", color: "#ff8888", marginTop: 12 }}>
@@ -296,18 +268,16 @@ export default function App() {
               {/* Submit button */}
               <button
                 type="submit"
-                disabled={!videoEnded || enviando}
+                disabled={enviando}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   width: "100%", marginTop: 20, padding: "16px 24px",
                   borderRadius: 10, border: "none", fontWeight: 800, fontSize: "1rem", letterSpacing: 1,
-                  cursor: videoEnded && !enviando ? "pointer" : "not-allowed",
-                  background: videoEnded
-                    ? (enviando ? "rgba(0,180,80,0.5)" : "linear-gradient(90deg,#00c060,#00e87a)")
-                    : "rgba(255,255,255,0.05)",
-                  color: videoEnded ? "#fff" : "#445566",
+                  cursor: enviando ? "not-allowed" : "pointer",
+                  background: enviando ? "rgba(0,180,80,0.5)" : "linear-gradient(90deg,#00c060,#00e87a)",
+                  color: "#fff",
                   transition: "all 0.3s ease",
-                  boxShadow: videoEnded ? "0 4px 24px rgba(0,200,100,0.3)" : "none",
+                  boxShadow: "0 4px 24px rgba(0,200,100,0.3)",
                 }}
               >
                 <span>{enviando ? "Enviando..." : "ENTRAR AL GRUPO"}</span>
