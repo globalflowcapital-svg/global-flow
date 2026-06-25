@@ -151,8 +151,8 @@ export default function Admin() {
       if (!res.ok) throw new Error("Error " + res.status);
       setLeads(await res.json());
       setSelected(new Set());
-    } catch {
-      setError("No se pudo conectar con la API.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo conectar con la API.");
     } finally {
       setLoading(false);
     }
@@ -340,6 +340,15 @@ export default function Admin() {
                 {sortDesc ? "⬇ Más recientes" : "⬆ Más antiguos"}
               </button>
               <span style={{ color: "#556677", fontSize: "0.78rem", marginLeft: "auto" }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
+              {someSelected && (
+                <button
+                  onClick={deleteSelected}
+                  disabled={deleting}
+                  style={{ background: "rgba(220,50,50,0.15)", border: "1px solid rgba(220,50,50,0.3)", borderRadius: 7, color: "#ff8888", padding: "9px 14px", fontSize: "0.83rem", cursor: deleting ? "not-allowed" : "pointer", whiteSpace: "nowrap", fontFamily: "inherit", fontWeight: 600 }}
+                >
+                  {deleting ? "Eliminando…" : `🗑 Eliminar ${selected.size} seleccionado${selected.size > 1 ? "s" : ""}`}
+                </button>
+              )}
             </div>
 
             {loading ? (
@@ -358,7 +367,15 @@ export default function Admin() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.83rem" }}>
                     <thead>
                       <tr style={{ background: "#0a1520", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        {["#", "Nombre", "País", "WhatsApp", "Criptos", "Nivel", "Fuente", "Fecha"].map((h) => (
+                        <th style={{ padding: "12px 14px", textAlign: "left", color: "#8899aa", fontWeight: 600 }}>
+                          <input
+                            type="checkbox"
+                            checked={allFilteredSelected}
+                            onChange={toggleSelectAll}
+                            style={{ accentColor: GREEN, cursor: "pointer", width: 15, height: 15 }}
+                          />
+                        </th>
+                        {["#", "Nombre", "País", "WhatsApp", "Criptos", "Nivel", "Fuente", "Fecha", ""].map((h) => (
                           <th key={h} style={{ padding: "12px 14px", textAlign: "left", color: "#8899aa", fontWeight: 600, whiteSpace: "nowrap", letterSpacing: 0.3 }}>{h}</th>
                         ))}
                       </tr>
@@ -366,9 +383,17 @@ export default function Admin() {
                     <tbody>
                       {filtered.map((lead, i) => (
                         <tr key={lead.id}
-                          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,220,100,0.04)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)")}>
+                          style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", background: selected.has(lead.id) ? "rgba(0,220,100,0.04)" : i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}
+                          onMouseEnter={(e) => { if (!selected.has(lead.id)) e.currentTarget.style.background = "rgba(0,220,100,0.04)"; }}
+                          onMouseLeave={(e) => { if (!selected.has(lead.id)) e.currentTarget.style.background = i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)"; }}>
+                          <td style={{ padding: "11px 14px" }}>
+                            <input
+                              type="checkbox"
+                              checked={selected.has(lead.id)}
+                              onChange={() => toggleSelect(lead.id)}
+                              style={{ accentColor: GREEN, cursor: "pointer", width: 15, height: 15 }}
+                            />
+                          </td>
                           <td style={{ padding: "11px 14px", color: "#556677" }}>{lead.id}</td>
                           <td style={{ padding: "11px 14px", color: "#fff", fontWeight: 600 }}>{lead.nombre}</td>
                           <td style={{ padding: "11px 14px", color: "#ccd", whiteSpace: "nowrap" }}>{lead.pais} <span style={{ color: "#556677" }}>{lead.codigoPais}</span></td>
@@ -392,6 +417,14 @@ export default function Admin() {
                           <td style={{ padding: "11px 14px", color: "#556677", whiteSpace: "nowrap", fontSize: "0.78rem" }}>
                             {new Date(lead.createdAt).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })}
                             <br /><span style={{ color: "#334455" }}>{new Date(lead.createdAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</span>
+                          </td>
+                          <td style={{ padding: "11px 14px" }}>
+                            <button
+                              onClick={() => deleteLead(lead.id)}
+                              style={{ background: "rgba(220,50,50,0.1)", border: "1px solid rgba(220,50,50,0.2)", borderRadius: 6, color: "#ff8888", padding: "5px 10px", fontSize: "0.75rem", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}
+                            >
+                              🗑 Eliminar
+                            </button>
                           </td>
                         </tr>
                       ))}

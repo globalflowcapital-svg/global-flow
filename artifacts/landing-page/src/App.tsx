@@ -328,7 +328,10 @@ function SuccessRedirect() {
   const WA_URL = "https://chat.whatsapp.com/HZUpfDE1vwc2BGOBrBevLJ?s=sw&p=i&mlu=3";
 
   useEffect(() => {
-    if (count <= 0) return;
+    if (count <= 0) {
+      window.location.href = WA_URL;
+      return;
+    }
     const t = setTimeout(() => setCount((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [count]);
