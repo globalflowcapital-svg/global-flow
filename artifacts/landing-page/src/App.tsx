@@ -1,9 +1,11 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 
 const PAISES = [
+  { nombre: "Andorra", codigo: "+376", bandera: "🇦🇩" },
   { nombre: "Argentina", codigo: "+54", bandera: "🇦🇷" },
   { nombre: "Bolivia", codigo: "+591", bandera: "🇧🇴" },
   { nombre: "Brasil", codigo: "+55", bandera: "🇧🇷" },
+  { nombre: "Canadá", codigo: "+1", bandera: "🇨🇦" },
   { nombre: "Chile", codigo: "+56", bandera: "🇨🇱" },
   { nombre: "Colombia", codigo: "+57", bandera: "🇨🇴" },
   { nombre: "Costa Rica", codigo: "+506", bandera: "🇨🇷" },
@@ -115,7 +117,7 @@ export default function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nombre.trim() || !whatsapp.trim() || operadoCriptos === null || !nivel || !fuente) {
+    if (!nombre.trim() || !whatsapp.trim() || operadoCriptos === null || !nivel) {
       setError("Por favor completa todos los campos.");
       return;
     }
@@ -132,7 +134,7 @@ export default function App() {
           whatsapp: whatsapp.trim(),
           operadoCriptos,
           nivel,
-          fuente,
+          fuente: fuente ?? undefined,
         }),
       });
       if (!res.ok) throw new Error("Error del servidor");
@@ -341,17 +343,6 @@ function SuccessRedirect() {
 }
 
 // ── Sub-component: form fields ──
-const FUENTES = [
-  { value: "instagram",  label: "📸 Instagram" },
-  { value: "tiktok",     label: "🎵 TikTok" },
-  { value: "facebook",   label: "👤 Facebook" },
-  { value: "youtube",    label: "▶️ YouTube" },
-  { value: "referido",   label: "🤝 Referido / amigo" },
-  { value: "twitter",    label: "🐦 Twitter / X" },
-  { value: "whatsapp",   label: "💬 WhatsApp" },
-  { value: "otro",       label: "🔍 Otro" },
-];
-
 interface FormFieldsProps {
   nombre: string; setNombre: (v: string) => void;
   pais: typeof PAISES[0]; setPais: (v: typeof PAISES[0]) => void;
@@ -482,30 +473,6 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
         </div>
       </div>
 
-      {/* Traffic source */}
-      <div>
-        <div style={{ fontSize: "0.85rem", color: "#ccd", marginBottom: 8, fontWeight: 600 }}>¿Cómo nos encontraste?</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          {FUENTES.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              disabled={disabled}
-              onClick={() => setFuente(f.value)}
-              style={{
-                padding: "10px 8px", borderRadius: 8,
-                border: fuente === f.value ? "1.5px solid #00e87a" : "1px solid rgba(255,255,255,0.1)",
-                background: fuente === f.value ? "rgba(0,220,120,0.12)" : "rgba(255,255,255,0.03)",
-                color: fuente === f.value ? "#00e87a" : "#8899aa",
-                fontWeight: 600, fontSize: "0.83rem", cursor: disabled ? "not-allowed" : "pointer",
-                textAlign: "left", transition: "all 0.2s",
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
