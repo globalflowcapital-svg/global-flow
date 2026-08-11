@@ -141,7 +141,7 @@ export default function App() {
       setEnviado(true);
       // Redirigir al grupo de WhatsApp después de 3 segundos
       setTimeout(() => {
-        window.location.href = "https://chat.whatsapp.com/HZUpfDE1vwc2BGOBrBevLJ?s=sw&p=i&mlu=3";
+        window.location.href = "https://chat.whatsapp.com/CZHF8IfmVjHEU63r3RPLu4?s=sw&p=i&mlu=4";
       }, 3000);
     } catch {
       setError("Hubo un error al enviar. Intenta de nuevo.");
@@ -297,7 +297,7 @@ export default function App() {
 // ── Sub-component: success + redirect countdown ──
 function SuccessRedirect() {
   const [count, setCount] = useState(3);
-  const WA_URL = "https://chat.whatsapp.com/HZUpfDE1vwc2BGOBrBevLJ?s=sw&p=i&mlu=3";
+  const WA_URL = "https://chat.whatsapp.com/CZHF8IfmVjHEU63r3RPLu4?s=sw&p=i&mlu=4";
 
   useEffect(() => {
     if (count <= 0) {
