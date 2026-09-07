@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
 
 const PAISES = [
   { nombre: "Andorra", codigo: "+376", bandera: "🇦🇩" },
@@ -26,22 +26,7 @@ const PAISES = [
   { nombre: "Venezuela", codigo: "+58", bandera: "🇻🇪" },
 ];
 
-function formatTime(s: number) {
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${sec.toString().padStart(2, "0")}`;
-}
-
 export default function App() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const lastTimeRef = useRef(0);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [videoEnded, setVideoEnded] = useState(false);
-  const [muted, setMuted] = useState(false);
-
   // Form state
   const [nombre, setNombre] = useState("");
   const [pais, setPais] = useState(PAISES[4]); // Colombia default
@@ -58,62 +43,6 @@ export default function App() {
   const paisesFiltrados = PAISES.filter((p) =>
     p.nombre.toLowerCase().includes(buscarPais.toLowerCase())
   );
-
-  // Prevent seeking forward
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const onTimeUpdate = () => {
-      if (video.currentTime > lastTimeRef.current + 0.5) {
-        video.currentTime = lastTimeRef.current;
-        return;
-      }
-      lastTimeRef.current = video.currentTime;
-      setCurrentTime(video.currentTime);
-      setProgress(video.duration > 0 ? (video.currentTime / video.duration) * 100 : 0);
-    };
-
-    const onLoaded = () => setDuration(video.duration);
-    const onEnded = () => { setVideoEnded(true); setProgress(100); };
-    const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
-
-    video.addEventListener("timeupdate", onTimeUpdate);
-    video.addEventListener("loadedmetadata", onLoaded);
-    video.addEventListener("ended", onEnded);
-    video.addEventListener("play", onPlay);
-    video.addEventListener("pause", onPause);
-
-    return () => {
-      video.removeEventListener("timeupdate", onTimeUpdate);
-      video.removeEventListener("loadedmetadata", onLoaded);
-      video.removeEventListener("ended", onEnded);
-      video.removeEventListener("play", onPlay);
-      video.removeEventListener("pause", onPause);
-    };
-  }, []);
-
-  const togglePlay = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (video.paused) video.play();
-    else video.pause();
-  }, []);
-
-  const toggleMute = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.muted = !video.muted;
-    setMuted(video.muted);
-  }, []);
-
-  const toggleFullscreen = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    if (document.fullscreenElement) document.exitFullscreen();
-    else video.requestFullscreen();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,71 +93,16 @@ export default function App() {
           <p style={{ color: "#8899aa", fontSize: "0.95rem", margin: 0 }}>Mira el video y entiende por qué.</p>
         </div>
 
-        {/* ── CUSTOM VIDEO PLAYER ── */}
+        {/* ── GOOGLE DRIVE VIDEO ── */}
         <div style={{ borderRadius: 14, overflow: "hidden", background: "#0d1117", border: "1px solid rgba(0,150,255,0.15)", boxShadow: "0 0 40px rgba(0,100,200,0.12)", marginBottom: 24 }}>
-          {/* No-skip badge */}
-          <div style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "3px 10px", fontSize: "0.72rem", color: "#ccd" }}>
-              🔒 Vídeo no saltable
-            </span>
-          </div>
-
-          {/* Video element — hidden native controls */}
-          <div style={{ position: "relative", background: "#000", cursor: "pointer" }} onClick={togglePlay}>
-            <video
-              ref={videoRef}
-              style={{ width: "100%", display: "block", maxHeight: 300, objectFit: "cover" }}
-              poster="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&q=80"
-              playsInline
-            >
-              <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
-            </video>
-            {/* Play overlay */}
-            {!playing && !videoEnded && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.25)", pointerEvents: "none" }}>
-                <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(0,0,0,0.55)", border: "2px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-              </div>
-            )}
-            {videoEnded && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", pointerEvents: "none" }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ color: "#00e87a", fontSize: "2rem" }}>✓</div>
-                  <div style={{ color: "#fff", fontSize: "0.85rem", fontWeight: 600 }}>Video completado</div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Custom controls bar */}
-          <div style={{ background: "#0d1117", padding: "8px 14px" }}>
-            {/* Progress bar (read-only, no click) */}
-            <div style={{ height: 3, background: "#1e2a35", borderRadius: 2, marginBottom: 8, overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg,#00aaff,#00e87a)", borderRadius: 2, transition: "width 0.4s ease" }} />
-            </div>
-            {/* Buttons row */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <button onClick={togglePlay} style={{ background: "none", border: "none", color: "#ccd", cursor: "pointer", padding: 2, lineHeight: 0 }}>
-                {playing
-                  ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>
-                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                }
-              </button>
-              <span style={{ fontSize: "0.72rem", color: "#8899aa", fontVariantNumeric: "tabular-nums" }}>
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
-              <div style={{ flex: 1 }} />
-              <button onClick={toggleMute} style={{ background: "none", border: "none", color: "#ccd", cursor: "pointer", padding: 2, lineHeight: 0 }}>
-                {muted
-                  ? <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97V10.18L16.45 12.63C16.48 12.43 16.5 12.21 16.5 12zM19 12C19 12.94 18.8 13.82 18.46 14.64L19.97 16.15C20.62 14.91 21 13.5 21 12C21 7.72 18.01 4.14 14 3.23V5.29C16.89 6.15 19 8.83 19 12zM4.27 3L3 4.27L7.73 9H3v6h4l5 5v-6.73l4.25 4.25C12.87 17.82 11.98 18.08 11 18.08c-1.38 0-2.63-.45-3.64-1.19L6 18.26C7.34 19.34 9.1 20 11 20c1.26 0 2.44-.3 3.48-.82L16.73 21.5L18 20.23L11 13.23L4.27 3zM11 5l-2.17 2.17L11 9.34V5z"/></svg>
-                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-                }
-              </button>
-              <button onClick={toggleFullscreen} style={{ background: "none", border: "none", color: "#ccd", cursor: "pointer", padding: 2, lineHeight: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-              </button>
-            </div>
+          <div style={{ position: "relative", width: "100%", paddingTop: "75%", background: "#000" }}>
+            <iframe
+              src="https://drive.google.com/file/d/1iNTvXXQ8P6TiO8P5COK6A-cAn_YQVB1i/preview"
+              title="Video de presentación"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+            />
           </div>
         </div>
 
