@@ -1,5 +1,19 @@
 import { useEffect, useState } from "react";
 
+declare global {
+  interface Window {
+    fbq?: (action: "track", eventName: "Lead") => void;
+  }
+}
+
+function trackMetaLead(): void {
+  try {
+    window.fbq?.("track", "Lead");
+  } catch {
+    // Analytics must never interrupt the form action.
+  }
+}
+
 const PAISES = [
   { nombre: "Andorra", codigo: "+376", bandera: "🇦🇩" },
   { nombre: "Argentina", codigo: "+54", bandera: "🇦🇷" },
@@ -144,6 +158,7 @@ export default function App() {
               {/* Submit button */}
               <button
                 type="submit"
+                onClick={trackMetaLead}
                 disabled={enviando}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
