@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/"
+previewPath = "/day-planner/"
 title = "Day Plan Generator"
 version = "1.0.0"
 id = "artifacts/day-planner"
@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
+paths = [ "/day-planner/" ]
 localPort = 19318
 
 [services.development]
@@ -28,4 +28,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "19318"
-BASE_PATH = "/"
+BASE_PATH = "/day-planner/"

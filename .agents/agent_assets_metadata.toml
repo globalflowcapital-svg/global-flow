@@ -6,15 +6,18 @@ id = "BM9Lf1_0EW0z0CBNciAId"
 uri = "file://landing-page-code.tar.gz"
 type = "unspecified"
 title = "Código fuente — Landing Page"
+logical_id = "915eeb0d-501a-4653-81a7-a0ad32c4add5"
 
 [[outputs]]
 id = "6r0zmeVLQWLLME537eKUe"
 uri = "file://landing-page-editable.tar.gz"
 type = "unspecified"
 title = "Landing Page — HTML editable (.tar.gz)"
+logical_id = "b50ca826-bb0d-4a68-805d-bfe8fa3e4b8b"
 
 [[outputs]]
 id = "JMr7N1AuJyok_wory1lPh"
 uri = "file://globalflow-landing.tar.gz"
 type = "unspecified"
 title = "Global Flow — HTML editable (.tar.gz)"
+logical_id = "d907f77a-87df-494e-9494-747d7dc7b040"
