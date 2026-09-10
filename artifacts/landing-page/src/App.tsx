@@ -107,15 +107,23 @@ export default function App() {
           <p style={{ color: "#8899aa", fontSize: "0.95rem", margin: 0 }}>Mira el video y entiende por qué.</p>
         </div>
 
-        {/* ── GOOGLE DRIVE VIDEO ── */}
+        {/* ── AUTOPLAY VIDEO ── */}
         <div style={{ borderRadius: 14, overflow: "hidden", background: "#0d1117", border: "1px solid rgba(0,150,255,0.15)", boxShadow: "0 0 40px rgba(0,100,200,0.12)", marginBottom: 24 }}>
           <div style={{ position: "relative", width: "100%", paddingTop: "75%", background: "#000" }}>
-            <iframe
-              src="https://drive.google.com/file/d/1iNTvXXQ8P6TiO8P5COK6A-cAn_YQVB1i/preview"
-              title="Video de presentación"
-              allow="autoplay; fullscreen"
-              allowFullScreen
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+            <video
+              src={`${import.meta.env.BASE_URL}globalflow-presentation.mp4`}
+              poster={`${import.meta.env.BASE_URL}globalflow-poster.jpg`}
+              aria-label="Video de presentación"
+              autoPlay
+              muted
+              playsInline
+              loop
+              preload="metadata"
+              controls={false}
+              disablePictureInPicture
+              controlsList="nodownload noplaybackrate nofullscreen"
+              onClick={(event) => void event.currentTarget.play()}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, objectFit: "cover" }}
             />
           </div>
         </div>
