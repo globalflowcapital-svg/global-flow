@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 declare global {
   interface Window {
@@ -41,6 +41,9 @@ const PAISES = [
 ];
 
 export default function App() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoMuted, setVideoMuted] = useState(true);
+
   // Form state
   const [nombre, setNombre] = useState("");
   const [pais, setPais] = useState(PAISES[4]); // Colombia default
@@ -57,6 +60,37 @@ export default function App() {
   const paisesFiltrados = PAISES.filter((p) =>
     p.nombre.toLowerCase().includes(buscarPais.toLowerCase())
   );
+
+  const toggleVideoSound = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const shouldMute = !video.muted;
+    video.muted = shouldMute;
+    video.volume = 1;
+    setVideoMuted(shouldMute);
+    void video.play();
+  };
+
+  const toggleVideoFullscreen = async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+
+    if (video.requestFullscreen) {
+      await video.requestFullscreen();
+      return;
+    }
+
+    const safariVideo = video as HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+    };
+    safariVideo.webkitEnterFullscreen?.();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,20 +145,80 @@ export default function App() {
         <div style={{ borderRadius: 14, overflow: "hidden", background: "#0d1117", border: "1px solid rgba(0,150,255,0.15)", boxShadow: "0 0 40px rgba(0,100,200,0.12)", marginBottom: 24 }}>
           <div style={{ position: "relative", width: "100%", paddingTop: "75%", background: "#000" }}>
             <video
+              ref={videoRef}
               src={`${import.meta.env.BASE_URL}globalflow-presentation.mp4`}
               poster={`${import.meta.env.BASE_URL}globalflow-poster.jpg`}
               aria-label="Video de presentación"
               autoPlay
-              muted
+              muted={videoMuted}
               playsInline
               loop
               preload="metadata"
               controls={false}
               disablePictureInPicture
-              controlsList="nodownload noplaybackrate nofullscreen"
+              controlsList="nodownload noplaybackrate"
               onClick={(event) => void event.currentTarget.play()}
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, objectFit: "cover" }}
             />
+            <div
+              style={{
+                position: "absolute",
+                right: 10,
+                bottom: 10,
+                zIndex: 2,
+                display: "flex",
+                gap: 8,
+              }}
+            >
+              <button
+                type="button"
+                onClick={toggleVideoSound}
+                aria-label={videoMuted ? "Activar sonido" : "Silenciar video"}
+                title={videoMuted ? "Activar sonido" : "Silenciar video"}
+                style={{
+                  width: 44,
+                  height: 44,
+                  display: "grid",
+                  placeItems: "center",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 10,
+                  background: "rgba(0,0,0,0.72)",
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                {videoMuted ? (
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25A6.9 6.9 0 0 1 14 18.17v2.08a8.9 8.9 0 0 0 3.75-1.25L19.73 21 21 19.73 4.27 3ZM12 4 9.91 6.09 12 8.18V4Zm6.59 4.59-1.42 1.42c.52.58.83 1.34.83 1.99 0 .35-.06.69-.17 1l1.54 1.54c.4-.77.63-1.64.63-2.54 0-1.33-.53-2.53-1.41-3.41Z" />
+                  </svg>
+                ) : (
+                  <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.06A4.5 4.5 0 0 0 16.5 12ZM14 3.23v2.06A7 7 0 0 1 14 18.71v2.06A9 9 0 0 0 14 3.23Z" />
+                  </svg>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => void toggleVideoFullscreen()}
+                aria-label="Ver video en pantalla completa"
+                title="Pantalla completa"
+                style={{
+                  width: 44,
+                  height: 44,
+                  display: "grid",
+                  placeItems: "center",
+                  border: "1px solid rgba(255,255,255,0.25)",
+                  borderRadius: 10,
+                  background: "rgba(0,0,0,0.72)",
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M7 14H5v5h5v-2H7v-3Zm-2-4h2V7h3V5H5v5Zm12 7h-3v2h5v-5h-2v3ZM14 5v2h3v3h2V5h-5Z" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
