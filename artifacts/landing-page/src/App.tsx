@@ -42,7 +42,8 @@ const PAISES = [
 
 export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoMuted, setVideoMuted] = useState(true);
+  const [videoMuted, setVideoMuted] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   // Form state
   const [nombre, setNombre] = useState("");
@@ -70,6 +71,20 @@ export default function App() {
     video.volume = 1;
     setVideoMuted(shouldMute);
     void video.play();
+  };
+
+  const toggleVideoPlayback = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.muted = false;
+      video.volume = 1;
+      setVideoMuted(false);
+      void video.play();
+    } else {
+      video.pause();
+    }
   };
 
   const toggleVideoFullscreen = async () => {
@@ -141,7 +156,7 @@ export default function App() {
           <p style={{ color: "#8899aa", fontSize: "0.95rem", margin: 0 }}>Mira el video y entiende por qué.</p>
         </div>
 
-        {/* ── AUTOPLAY VIDEO ── */}
+        {/* ── MANUAL 1080P VIDEO ── */}
         <div style={{ borderRadius: 14, overflow: "hidden", background: "#0d1117", border: "1px solid rgba(0,150,255,0.15)", boxShadow: "0 0 40px rgba(0,100,200,0.12)", marginBottom: 24 }}>
           <div style={{ position: "relative", width: "100%", paddingTop: "75%", background: "#000" }}>
             <video
@@ -149,7 +164,6 @@ export default function App() {
               src={`${import.meta.env.BASE_URL}globalflow-presentation.mp4`}
               poster={`${import.meta.env.BASE_URL}globalflow-poster.jpg`}
               aria-label="Video de presentación"
-              autoPlay
               muted={videoMuted}
               playsInline
               loop
@@ -157,9 +171,40 @@ export default function App() {
               controls={false}
               disablePictureInPicture
               controlsList="nodownload noplaybackrate"
-              onClick={(event) => void event.currentTarget.play()}
-              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, objectFit: "cover" }}
+              onPlay={() => setVideoPlaying(true)}
+              onPause={() => setVideoPlaying(false)}
+              onClick={toggleVideoPlayback}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, objectFit: "cover", cursor: "pointer" }}
             />
+            {!videoPlaying && (
+              <button
+                type="button"
+                onClick={toggleVideoPlayback}
+                aria-label="Reproducir video con sonido"
+                title="Reproducir con sonido"
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  zIndex: 2,
+                  width: 72,
+                  height: 72,
+                  display: "grid",
+                  placeItems: "center",
+                  transform: "translate(-50%, -50%)",
+                  border: "2px solid rgba(255,255,255,0.5)",
+                  borderRadius: "50%",
+                  background: "rgba(0,0,0,0.72)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+                }}
+              >
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style={{ marginLeft: 3 }}>
+                  <path d="M8 5v14l11-7Z" />
+                </svg>
+              </button>
+            )}
             <div
               style={{
                 position: "absolute",
