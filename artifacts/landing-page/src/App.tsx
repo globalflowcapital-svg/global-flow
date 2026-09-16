@@ -130,6 +130,7 @@ export default function App() {
         }),
       });
       if (!res.ok) throw new Error("Error del servidor");
+      trackMetaLead();
       setEnviado(true);
       // Redirigir al grupo de WhatsApp después de 3 segundos
       setTimeout(() => {
@@ -305,7 +306,6 @@ export default function App() {
               {/* Submit button */}
               <button
                 type="submit"
-                onClick={trackMetaLead}
                 disabled={enviando}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
