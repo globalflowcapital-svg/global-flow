@@ -291,7 +291,7 @@ export default function App() {
         </div>
 
         {/* ── FORM CARD ── */}
-        <div className="bg-[#0f1923] border border-white/5 rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+        <div className="bg-[#0f1923] rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-[#00e87a]/5 blur-[80px] pointer-events-none"></div>
 
           {enviado ? (
@@ -334,15 +334,17 @@ export default function App() {
               <button
                 type="submit"
                 disabled={enviando}
-                className={`w-full flex items-center justify-between mt-8 px-7 py-4 rounded-xl border-none font-extrabold text-[15px] tracking-widest transition-all duration-300 group ${
+                className={`relative inline-flex w-full items-center justify-center p-0.5 mt-8 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all duration-300 ${
                   enviando 
-                    ? "bg-[#00c060]/50 text-white/70 cursor-not-allowed" 
-                    : "bg-gradient-to-r from-[#00c060] to-[#00e87a] text-white cursor-pointer hover:shadow-[0_8px_30px_rgba(0,232,122,0.35)] hover:scale-[1.01] active:scale-[0.99]"
+                    ? "opacity-60 cursor-not-allowed" 
+                    : "cursor-pointer hover:shadow-[0_8px_30px_rgba(168,85,247,0.35)] hover:scale-[1.01] active:scale-[0.99]"
                 }`}
                 data-testid="button-submit"
               >
-                <span>{enviando ? "ENVIANDO..." : "ENTRAR AL GRUPO"}</span>
-                <ArrowRight className={`w-5 h-5 ${enviando ? "animate-pulse" : "group-hover:translate-x-1 transition-transform duration-300"}`} />
+                <span className="relative flex w-full items-center justify-between rounded-[10px] bg-[#0f1923] px-7 py-4 font-extrabold tracking-widest transition-all duration-300 group-hover:bg-transparent">
+                  <span>{enviando ? "ENVIANDO..." : "ENTRAR AL GRUPO"}</span>
+                  <ArrowRight className={`w-5 h-5 ${enviando ? "animate-pulse" : "group-hover:translate-x-1 transition-transform duration-300"}`} />
+                </span>
               </button>
             </form>
           )}
@@ -618,31 +620,23 @@ function FormFields({
             type="button" 
             disabled={disabled} 
             onClick={() => { setOperadoCriptos(true); setTouched(p => ({...p, operadoCriptos: true})); }} 
-            className={`flex items-center justify-center gap-2.5 py-3.5 rounded-xl border transition-all duration-200 outline-none focus:ring-2 focus:ring-[#00e87a]/40 text-sm ${
-              operadoCriptos === true 
-                ? "border-[#00e87a] bg-[#00e87a]/15 text-[#00e87a] font-bold shadow-[0_0_20px_rgba(0,232,122,0.15)]" 
-                : touched.operadoCriptos && !isCriptosValid
-                  ? "border-red-500/50 bg-red-500/5 text-red-400 hover:bg-red-500/10"
-                  : "border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200 hover:border-white/20"
-            }`}
+            className={`relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all ${operadoCriptos === true ? "ring-2 ring-pink-300 shadow-[0_0_22px_rgba(236,72,153,0.28)]" : ""}`}
             data-testid="btn-criptos-si"
           >
-            Sí, he operado
+            <span className="relative w-full rounded-[10px] bg-[#17212b] px-3 py-3 transition-all duration-200 group-hover:bg-transparent">
+              Sí, he operado
+            </span>
           </button>
           <button 
             type="button" 
             disabled={disabled} 
             onClick={() => { setOperadoCriptos(false); setTouched(p => ({...p, operadoCriptos: true})); }} 
-            className={`flex items-center justify-center gap-2.5 py-3.5 rounded-xl border transition-all duration-200 outline-none focus:ring-2 focus:ring-[#00e87a]/40 text-sm ${
-              operadoCriptos === false 
-                ? "border-[#00e87a] bg-[#00e87a]/15 text-[#00e87a] font-bold shadow-[0_0_20px_rgba(0,232,122,0.15)]" 
-                : touched.operadoCriptos && !isCriptosValid
-                  ? "border-red-500/50 bg-red-500/5 text-red-400 hover:bg-red-500/10"
-                  : "border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200 hover:border-white/20"
-            }`}
+            className={`relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all ${operadoCriptos === false ? "ring-2 ring-pink-300 shadow-[0_0_22px_rgba(236,72,153,0.28)]" : ""}`}
             data-testid="btn-criptos-no"
           >
-            No, soy nuevo
+            <span className="relative w-full rounded-[10px] bg-[#17212b] px-3 py-3 transition-all duration-200 group-hover:bg-transparent">
+              No, soy nuevo
+            </span>
           </button>
         </div>
         {touched.operadoCriptos && !isCriptosValid && (
@@ -666,17 +660,13 @@ function FormFields({
                 type="button"
                 disabled={disabled}
                 onClick={() => { setNivel(n); setTouched(p => ({...p, nivel: true})); }}
-                className={`flex flex-col items-center justify-center gap-2 py-3.5 rounded-xl border transition-all duration-200 outline-none focus:ring-2 focus:ring-[#00e87a]/40 ${
-                  isSelected 
-                    ? "border-[#00e87a] bg-[#00e87a]/15 text-[#00e87a] font-bold shadow-[0_0_20px_rgba(0,232,122,0.15)] scale-[1.03]" 
-                    : touched.nivel && !isNivelValid
-                      ? "border-red-500/50 bg-red-500/5 text-red-400 hover:bg-red-500/10"
-                      : "border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200 hover:border-white/20"
-                }`}
+                className={`relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all ${isSelected ? "ring-2 ring-pink-300 shadow-[0_0_22px_rgba(236,72,153,0.28)] scale-[1.03]" : ""}`}
                 data-testid={`btn-nivel-${n}`}
               >
-                <BarChart2 className={`w-5 h-5 transition-colors ${isSelected ? "text-[#00e87a]" : "text-gray-500"}`} />
-                <span className="text-[10px] uppercase tracking-wider font-bold">{n}</span>
+                <span className="relative flex w-full flex-col items-center justify-center gap-2 rounded-[10px] bg-[#17212b] px-2 py-3 transition-all duration-200 group-hover:bg-transparent">
+                  <BarChart2 className={`w-5 h-5 transition-colors ${isSelected ? "text-pink-300" : "text-gray-400 group-hover:text-white"}`} />
+                  <span className="text-[10px] uppercase tracking-wider font-bold">{n}</span>
+                </span>
               </button>
             );
           })}
