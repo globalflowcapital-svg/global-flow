@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { User, MessageCircle, BarChart2, ChevronDown, Search, Users, ArrowRight, Check, X } from "lucide-react";
 
 declare global {
   interface Window {
@@ -59,13 +58,6 @@ export default function App() {
   const [paisOpen, setPaisOpen] = useState(false);
   const [buscarPais, setBuscarPais] = useState("");
 
-  const [touched, setTouched] = useState({
-    nombre: false,
-    whatsapp: false,
-    operadoCriptos: false,
-    nivel: false,
-  });
-
   const paisesFiltrados = PAISES.filter((p) =>
     p.nombre.toLowerCase().includes(buscarPais.toLowerCase())
   );
@@ -117,25 +109,10 @@ export default function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Mark all as touched to trigger visual validation
-    setTouched({
-      nombre: true,
-      whatsapp: true,
-      operadoCriptos: true,
-      nivel: true,
-    });
-
-    const isNombreValid = nombre.trim().length > 0;
-    const isWhatsappValid = whatsapp.trim().length >= 6;
-    const isCriptosValid = operadoCriptos !== null;
-    const isNivelValid = nivel !== null;
-
-    if (!isNombreValid || !isWhatsappValid || !isCriptosValid || !isNivelValid) {
-      // Visual cues will show the errors; no need for aggressive global alert.
+    if (!nombre.trim() || !whatsapp.trim() || operadoCriptos === null || !nivel) {
+      setError("Por favor completa todos los campos.");
       return;
     }
-
     setError(null);
     setEnviando(true);
     try {
@@ -291,21 +268,18 @@ export default function App() {
         </div>
 
         {/* ── FORM CARD ── */}
-        <div className="bg-[#0f1923] rounded-2xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-[#00e87a]/5 blur-[80px] pointer-events-none"></div>
-
+        <div style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 24px" }}>
           {enviado ? (
             <SuccessRedirect />
           ) : (
-            <form onSubmit={handleSubmit} className="relative z-10" noValidate>
+            <form onSubmit={handleSubmit}>
               {/* Form title */}
-              <div className="text-center mb-7">
-                <div className="text-[1.35rem] font-black tracking-widest flex items-center justify-center gap-2.5 text-white mb-2">
-                  <Users className="w-6 h-6 text-[#00e87a]" />
-                  ACCESO AL GRUPO
+              <div style={{ textAlign: "center", marginBottom: 22 }}>
+                <div style={{ fontSize: "1.2rem", fontWeight: 800, letterSpacing: 1 }}>
+                  <span style={{ marginRight: 8 }}>👥</span>ACCESO AL GRUPO
                 </div>
-                <div className="text-[#8899aa] text-sm font-medium">
-                  Completa tus datos para entrar al grupo privado.
+                <div style={{ color: "#8899aa", fontSize: "0.85rem", marginTop: 4 }}>
+                  Completa tus datos para entrar al grupo.
                 </div>
               </div>
 
@@ -319,13 +293,11 @@ export default function App() {
                 operadoCriptos={operadoCriptos} setOperadoCriptos={setOperadoCriptos}
                 nivel={nivel} setNivel={setNivel}
                 fuente={fuente} setFuente={setFuente}
-                disabled={enviando}
-                touched={touched}
-                setTouched={setTouched}
+                disabled={false}
               />
 
               {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-sm text-red-400 mt-5 text-center font-medium" data-testid="msg-server-error">
+                <div style={{ background: "rgba(220,50,50,0.15)", border: "1px solid rgba(220,50,50,0.3)", borderRadius: 8, padding: "10px 14px", fontSize: "0.83rem", color: "#ff8888", marginTop: 12 }}>
                   {error}
                 </div>
               )}
@@ -334,17 +306,19 @@ export default function App() {
               <button
                 type="submit"
                 disabled={enviando}
-                className={`relative inline-flex w-full items-center justify-center p-0.5 mt-8 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all duration-300 ${
-                  enviando 
-                    ? "opacity-60 cursor-not-allowed" 
-                    : "cursor-pointer hover:shadow-[0_8px_30px_rgba(168,85,247,0.35)] hover:scale-[1.01] active:scale-[0.99]"
-                }`}
-                data-testid="button-submit"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  width: "100%", marginTop: 20, padding: "16px 24px",
+                  borderRadius: 10, border: "none", fontWeight: 800, fontSize: "1rem", letterSpacing: 1,
+                  cursor: enviando ? "not-allowed" : "pointer",
+                  background: enviando ? "rgba(0,180,80,0.5)" : "linear-gradient(90deg,#00c060,#00e87a)",
+                  color: "#fff",
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 24px rgba(0,200,100,0.3)",
+                }}
               >
-                <span className="relative flex w-full items-center justify-between rounded-[10px] bg-[#0f1923] px-7 py-4 font-extrabold tracking-widest transition-all duration-300 group-hover:bg-transparent">
-                  <span>{enviando ? "ENVIANDO..." : "ENTRAR AL GRUPO"}</span>
-                  <ArrowRight className={`w-5 h-5 ${enviando ? "animate-pulse" : "group-hover:translate-x-1 transition-transform duration-300"}`} />
-                </span>
+                <span>{enviando ? "Enviando..." : "ENTRAR AL GRUPO"}</span>
+                <span style={{ fontSize: "1.2rem" }}>→</span>
               </button>
             </form>
           )}
@@ -415,265 +389,121 @@ interface FormFieldsProps {
   nivel: string | null; setNivel: (v: string) => void;
   fuente: string | null; setFuente: (v: string) => void;
   disabled: boolean;
-  touched: {
-    nombre: boolean;
-    whatsapp: boolean;
-    operadoCriptos: boolean;
-    nivel: boolean;
-  };
-  setTouched: React.Dispatch<React.SetStateAction<{
-    nombre: boolean;
-    whatsapp: boolean;
-    operadoCriptos: boolean;
-    nivel: boolean;
-  }>>;
 }
 
-function FormFields({ 
-  nombre, setNombre, 
-  pais, setPais, 
-  paisOpen, setPaisOpen, 
-  buscarPais, setBuscarPais, 
-  paisesFiltrados, 
-  whatsapp, setWhatsapp, 
-  operadoCriptos, setOperadoCriptos, 
-  nivel, setNivel, 
-  disabled,
-  touched, setTouched
-}: FormFieldsProps) {
-
-  const isNombreValid = nombre.trim().length > 0;
-  const isWhatsappValid = whatsapp.trim().length >= 6;
-  const isCriptosValid = operadoCriptos !== null;
-  const isNivelValid = nivel !== null;
-
-  const showNombreError = touched.nombre && !isNombreValid;
-  const showNombreSuccess = touched.nombre && isNombreValid;
-
-  const showWhatsappError = touched.whatsapp && !isWhatsappValid;
-  const showWhatsappSuccess = touched.whatsapp && isWhatsappValid;
-
-  const getBorderClass = (error: boolean, success: boolean) => {
-    if (error) return "border-red-500 focus:border-red-500 focus:ring-red-500/20";
-    if (success) return "border-[#00e87a] focus:border-[#00e87a] focus:ring-[#00e87a]/20";
-    return "border-white/10 focus:border-[#00e87a] focus:ring-[#00e87a]/20 hover:border-white/20";
+function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, buscarPais, setBuscarPais, paisesFiltrados, whatsapp, setWhatsapp, operadoCriptos, setOperadoCriptos, nivel, setNivel, disabled }: FormFieldsProps) {
+  const inputStyle: React.CSSProperties = {
+    width: "100%", background: "#0a1520", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
+    color: "#ddeeff", padding: "12px 14px", fontSize: "0.9rem", outline: "none",
+    boxSizing: "border-box",
   };
 
-  const getIconColorClass = (error: boolean, success: boolean) => {
-    if (error) return "text-red-500";
-    if (success) return "text-[#00e87a]";
-    return "text-gray-400 peer-focus:text-[#00e87a]";
-  };
-
-  const getLabelColorClass = (error: boolean, success: boolean) => {
-    if (error) return "text-red-500";
-    if (success) return "text-[#00e87a]";
-    return "text-gray-400 peer-focus:text-[#00e87a]";
-  };
+  const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: "11px 8px", borderRadius: 8, border: active ? "1.5px solid #00e87a" : "1px solid rgba(255,255,255,0.1)",
+    background: active ? "rgba(0,220,120,0.12)" : "rgba(255,255,255,0.03)",
+    color: active ? "#00e87a" : "#8899aa", fontWeight: 600, fontSize: "0.88rem", cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 6, transition: "all 0.2s",
+  });
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Nombre */}
-      <div className="relative">
-        <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${getIconColorClass(showNombreError, showNombreSuccess)}`} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Nombre con etiqueta flotante de Bootstrap */}
+      <div className="form-floating">
         <input
           type="text"
           id="nombre"
-          className={`peer block w-full h-[54px] rounded-xl bg-[#0a1520] pl-11 pr-10 pb-2 pt-6 text-sm text-[#ddeeff] outline-none ring-1 ring-transparent transition-all border ${getBorderClass(showNombreError, showNombreSuccess)}`}
-          placeholder=" "
+          className="form-control"
+          placeholder="Nombre y apellido"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
-          onBlur={() => setTouched(p => ({ ...p, nombre: true }))}
           disabled={disabled}
-          aria-invalid={showNombreError}
-          aria-describedby={showNombreError ? "nombre-error" : undefined}
-          data-testid="input-nombre"
+          style={{ ...inputStyle, height: 54, padding: "1.5rem 14px 0.45rem" }}
         />
-        <label
-          htmlFor="nombre"
-          className={`absolute left-11 top-[19px] z-10 origin-[0] -translate-y-4 scale-75 transform text-[13px] font-medium duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 cursor-text ${getLabelColorClass(showNombreError, showNombreSuccess)}`}
-        >
-          Nombre y apellido
-        </label>
-        {showNombreSuccess && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#00e87a] w-5 h-5" data-testid="icon-nombre-success" />}
-        {showNombreError && <X className="absolute right-3.5 top-1/2 -translate-y-1/2 text-red-500 w-5 h-5" data-testid="icon-nombre-error" />}
-        
-        {showNombreError && (
-          <p id="nombre-error" className="text-red-500 text-xs mt-1.5 ml-1 absolute -bottom-5 left-0" data-testid="msg-nombre-error">
-            Ingresa tu nombre
-          </p>
-        )}
+        <label htmlFor="nombre" style={{ color: "#8899aa", fontSize: "0.85rem" }}>Nombre y apellido</label>
       </div>
-      
-      {showNombreError && <div className="h-1" />}
 
-      {/* Country + WhatsApp Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
-        {/* Country */}
-        <div className="relative h-[54px]" data-testid="select-pais-container">
+      {/* País + WhatsApp */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div style={{ position: "relative" }}>
           <button
             type="button"
             onClick={() => !disabled && setPaisOpen(!paisOpen)}
-            className={`flex items-center w-full h-full rounded-xl border bg-[#0a1520] pl-3.5 pr-3 cursor-pointer transition-all outline-none border-white/10 hover:border-white/20 focus:border-[#00e87a] focus:ring-1 focus:ring-[#00e87a]/20 ${
-              disabled ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            data-testid="button-pais"
-            aria-haspopup="listbox"
-            aria-expanded={paisOpen}
+            style={{ ...inputStyle, display: "flex", alignItems: "center", gap: 8, cursor: disabled ? "not-allowed" : "pointer", height: 54 }}
           >
-            <span className="text-2xl mr-2.5 drop-shadow-md" data-testid="selected-flag">{pais.bandera}</span>
-            <div className="flex flex-col items-start justify-center flex-1 overflow-hidden">
-              <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mb-0.5">País</span>
-              <span className="text-[13px] text-[#ddeeff] leading-none truncate w-full text-left font-medium">
-                {pais.nombre} <span className="text-gray-500 font-mono ml-1">{pais.codigo}</span>
-              </span>
-            </div>
-            <ChevronDown className={`ml-2 text-gray-400 w-4 h-4 transition-transform duration-200 ${paisOpen ? "rotate-180 text-[#00e87a]" : ""}`} />
+            <span style={{ fontSize: "1rem" }}>{pais.bandera}</span>
+            <span style={{ fontSize: "0.85rem", color: "#ddeeff" }}>{pais.nombre.length > 9 ? `${pais.nombre.slice(0, 9)}…` : pais.nombre} {pais.codigo}</span>
+            <span style={{ marginLeft: "auto", color: "#556677", fontSize: "0.7rem" }}>▾</span>
           </button>
-          
           {paisOpen && !disabled && (
-            <div className="absolute top-[100%] left-0 right-0 mt-2 bg-[#0f1923] border border-[#00e87a]/30 rounded-xl z-50 shadow-[0_10px_40px_rgba(0,0,0,0.5)] max-h-[260px] flex flex-col overflow-hidden" role="listbox">
-              <div className="p-2 border-b border-white/10 bg-[#0a1520]/50 backdrop-blur-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input 
-                    className="w-full bg-black/40 rounded-lg border border-white/10 text-sm text-[#ddeeff] pl-9 pr-3 py-2 outline-none focus:border-[#00e87a] focus:ring-1 focus:ring-[#00e87a]/20 transition-all placeholder:text-gray-500"
-                    placeholder="Buscar país..."
-                    value={buscarPais}
-                    onChange={e => setBuscarPais(e.target.value)}
-                    autoFocus
-                    data-testid="input-buscar-pais"
-                  />
-                </div>
+            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0f1923", border: "1px solid rgba(0,200,100,0.2)", borderRadius: 8, zIndex: 50, maxHeight: 220, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+              <div style={{ padding: "8px 8px 4px" }}>
+                <input
+                  placeholder="Buscar país..."
+                  value={buscarPais}
+                  onChange={(e) => setBuscarPais(e.target.value)}
+                  style={{ ...inputStyle, fontSize: "0.8rem", padding: "7px 10px" }}
+                  autoFocus
+                />
               </div>
-              <div className="overflow-y-auto flex-1 py-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/20">
-                {paisesFiltrados.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-gray-500">No se encontraron países</div>
-                ) : (
-                  paisesFiltrados.map((p) => (
-                    <button 
-                      key={p.nombre}
-                      type="button"
-                      onClick={() => { setPais(p); setPaisOpen(false); setBuscarPais(""); }}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#00e87a]/15 text-left transition-colors group"
-                      role="option"
-                      aria-selected={pais.nombre === p.nombre}
-                      data-testid={`option-pais-${p.nombre}`}
-                    >
-                      <span className="text-xl group-hover:scale-110 transition-transform drop-shadow-md">{p.bandera}</span>
-                      <span className="text-[13px] text-[#ddeeff] font-medium group-hover:text-white transition-colors">{p.nombre}</span>
-                      <span className="text-[11px] text-gray-500 ml-auto font-mono">{p.codigo}</span>
-                    </button>
-                  ))
-                )}
+              <div style={{ overflowY: "auto", maxHeight: 160 }}>
+                {paisesFiltrados.map((p) => (
+                  <button
+                    key={p.nombre}
+                    type="button"
+                    onClick={() => { setPais(p); setPaisOpen(false); setBuscarPais(""); }}
+                    style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", background: "none", border: "none", color: "#ddeeff", fontSize: "0.83rem", cursor: "pointer", textAlign: "left" }}
+                  >
+                    <span>{p.bandera}</span><span>{p.nombre}</span><span style={{ marginLeft: "auto", color: "#556677" }}>{p.codigo}</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}
         </div>
 
-        {/* WhatsApp */}
-        <div className="relative">
-          <MessageCircle className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${getIconColorClass(showWhatsappError, showWhatsappSuccess)}`} />
+        <div className="form-floating">
           <input
             type="tel"
             id="whatsapp"
-            className={`peer block w-full h-[54px] rounded-xl bg-[#0a1520] pl-11 pr-10 pb-2 pt-6 text-sm text-[#ddeeff] outline-none ring-1 ring-transparent transition-all border ${getBorderClass(showWhatsappError, showWhatsappSuccess)}`}
-            placeholder=" "
+            className="form-control"
+            placeholder="Número de WhatsApp"
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
-            onBlur={() => setTouched(p => ({ ...p, whatsapp: true }))}
             disabled={disabled}
-            aria-invalid={showWhatsappError}
-            aria-describedby={showWhatsappError ? "whatsapp-error" : undefined}
-            data-testid="input-whatsapp"
+            style={{ ...inputStyle, height: 54, padding: "1.5rem 14px 0.45rem" }}
           />
-          <label
-            htmlFor="whatsapp"
-            className={`absolute left-11 top-[19px] z-10 origin-[0] -translate-y-4 scale-75 transform text-[13px] font-medium duration-200 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:scale-100 peer-focus:-translate-y-4 peer-focus:scale-75 cursor-text ${getLabelColorClass(showWhatsappError, showWhatsappSuccess)}`}
-          >
-            Número de WhatsApp
-          </label>
-          {showWhatsappSuccess && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#00e87a] w-5 h-5" data-testid="icon-whatsapp-success" />}
-          {showWhatsappError && <X className="absolute right-3.5 top-1/2 -translate-y-1/2 text-red-500 w-5 h-5" data-testid="icon-whatsapp-error" />}
-          
-          {showWhatsappError && (
-            <p id="whatsapp-error" className="text-red-500 text-xs mt-1.5 ml-1 absolute -bottom-5 left-0" data-testid="msg-whatsapp-error">
-              Ingresa un número válido
-            </p>
-          )}
+          <label htmlFor="whatsapp" style={{ color: "#8899aa", fontSize: "0.85rem" }}>Número de WhatsApp</label>
         </div>
       </div>
-      
-      {showWhatsappError && <div className="h-1"></div>}
 
-      <div className="w-full h-px bg-white/5 my-1 rounded-full"></div>
-
-      {/* Crypto Experience */}
-      <div className="flex flex-col gap-3" data-testid="group-criptos">
-        <label className={`text-[13.5px] font-semibold flex items-center justify-between transition-colors ${touched.operadoCriptos && !isCriptosValid ? "text-red-500" : "text-[#8899aa]"}`}>
-          ¿Has operado con criptomonedas?
-          {touched.operadoCriptos && !isCriptosValid && <X className="w-4 h-4 text-red-500" data-testid="icon-criptos-error" />}
-          {touched.operadoCriptos && isCriptosValid && <Check className="w-4 h-4 text-[#00e87a]" data-testid="icon-criptos-success" />}
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <button 
-            type="button" 
-            disabled={disabled} 
-            onClick={() => { setOperadoCriptos(true); setTouched(p => ({...p, operadoCriptos: true})); }} 
-            className={`relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all ${operadoCriptos === true ? "ring-2 ring-pink-300 shadow-[0_0_22px_rgba(236,72,153,0.28)]" : ""}`}
-            data-testid="btn-criptos-si"
-          >
-            <span className="relative w-full rounded-[10px] bg-[#17212b] px-3 py-3 transition-all duration-200 group-hover:bg-transparent">
-              Sí, he operado
-            </span>
+      <div>
+        <div style={{ fontSize: "0.85rem", color: "#ccd", marginBottom: 8, fontWeight: 600 }}>¿Has operado con criptomonedas?</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button type="button" disabled={disabled} onClick={() => setOperadoCriptos(true)} style={toggleBtnStyle(operadoCriptos === true)}>
+            <span>✓</span> Sí
           </button>
-          <button 
-            type="button" 
-            disabled={disabled} 
-            onClick={() => { setOperadoCriptos(false); setTouched(p => ({...p, operadoCriptos: true})); }} 
-            className={`relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all ${operadoCriptos === false ? "ring-2 ring-pink-300 shadow-[0_0_22px_rgba(236,72,153,0.28)]" : ""}`}
-            data-testid="btn-criptos-no"
-          >
-            <span className="relative w-full rounded-[10px] bg-[#17212b] px-3 py-3 transition-all duration-200 group-hover:bg-transparent">
-              No, soy nuevo
-            </span>
+          <button type="button" disabled={disabled} onClick={() => setOperadoCriptos(false)} style={toggleBtnStyle(operadoCriptos === false)}>
+            <span>○</span> No
           </button>
         </div>
-        {touched.operadoCriptos && !isCriptosValid && (
-          <p className="text-red-500 text-xs ml-1" data-testid="msg-criptos-error">Selecciona una opción</p>
-        )}
       </div>
 
-      {/* Nivel */}
-      <div className="flex flex-col gap-3" data-testid="group-nivel">
-        <label className={`text-[13.5px] font-semibold flex items-center justify-between transition-colors ${touched.nivel && !isNivelValid ? "text-red-500" : "text-[#8899aa]"}`}>
-          ¿Qué nivel consideras que tienes?
-          {touched.nivel && !isNivelValid && <X className="w-4 h-4 text-red-500" data-testid="icon-nivel-error" />}
-          {touched.nivel && isNivelValid && <Check className="w-4 h-4 text-[#00e87a]" data-testid="icon-nivel-success" />}
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          {["principiante", "intermedio", "avanzado"].map((n) => {
-            const isSelected = nivel === n;
-            return (
-              <button
-                key={n}
-                type="button"
-                disabled={disabled}
-                onClick={() => { setNivel(n); setTouched(p => ({...p, nivel: true})); }}
-                className={`relative inline-flex items-center justify-center p-0.5 overflow-hidden text-sm font-medium text-white rounded-xl group bg-gradient-to-br from-purple-500 to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200 dark:focus:ring-purple-800 transition-all ${isSelected ? "ring-2 ring-pink-300 shadow-[0_0_22px_rgba(236,72,153,0.28)] scale-[1.03]" : ""}`}
-                data-testid={`btn-nivel-${n}`}
-              >
-                <span className="relative flex w-full flex-col items-center justify-center gap-2 rounded-[10px] bg-[#17212b] px-2 py-3 transition-all duration-200 group-hover:bg-transparent">
-                  <BarChart2 className={`w-5 h-5 transition-colors ${isSelected ? "text-pink-300" : "text-gray-400 group-hover:text-white"}`} />
-                  <span className="text-[10px] uppercase tracking-wider font-bold">{n}</span>
-                </span>
-              </button>
-            );
-          })}
+      <div>
+        <div style={{ fontSize: "0.85rem", color: "#ccd", marginBottom: 8, fontWeight: 600 }}>¿Qué nivel consideras que tienes?</div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {["principiante", "intermedio", "avanzado"].map((n) => (
+            <button
+              key={n}
+              type="button"
+              disabled={disabled}
+              onClick={() => setNivel(n)}
+              style={toggleBtnStyle(nivel === n)}
+            >
+              <span style={{ fontSize: "0.75rem" }}>📊</span>
+              {n.charAt(0).toUpperCase() + n.slice(1)}
+            </button>
+          ))}
         </div>
-        {touched.nivel && !isNivelValid && (
-          <p className="text-red-500 text-xs ml-1" data-testid="msg-nivel-error">Selecciona tu nivel</p>
-        )}
       </div>
     </div>
   );
