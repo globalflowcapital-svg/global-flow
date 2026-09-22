@@ -471,6 +471,734 @@
 
         <!-- CTA -->
         <button type="submit" class="cta-btn" id="cta-btn" style="margin-top:20px;" disabled>
+          <span class="text-center" id="cta-text">ENTRAR AL GRUPO</span>
+          <span>→</span>
+        </button>
+      </form>
+    </div><!-- /form-card -->
+
+  </div><!-- /page-wrap -->
+
+  <script>
+    /* ================================================================
+       CONFIGURACIÓN — edita estos valores
+       ================================================================ */
+
+    // ► URL de tu API para guardar los leads.
+    //   Si usas este HTML junto con el servidor Express, pon la URL completa,
+    //   por ejemplo: "https://tu-dominio.replit.app/api/leads"
+    const API_URL = "/api/leads";
+
+    // ► Lista de países con código de marcado
+    const PAISES = [
+      { nombre:"Argentina",           codigo:"+54",    bandera:"🇦🇷" },
+      { nombre:"Bolivia",             codigo:"+591",   bandera:"🇧🇴" },
+      { nombre:"Brasil",              codigo:"+55",    bandera:"🇧🇷" },
+      { nombre:"Chile",               codigo:"+56",    bandera:"🇨🇱" },
+      { nombre:"Colombia",            codigo:"+57",    bandera:"🇨🇴" },
+      { nombre:"Costa Rica",          codigo:"+506",   bandera:"🇨🇷" },
+      { nombre:"Cuba",                codigo:"+53",    bandera:"🇨🇺" },
+      { nombre:"Ecuador",             codigo:"+593",   bandera:"🇪🇨" },
+      { nombre:"El Salvador",         codigo:"+503",   bandera:"🇸🇻" },
+      { nombre:"España",              codigo:"+34",    bandera:"🇪🇸" },
+      { nombre:"Estados Unidos",      codigo:"+1",     bandera:"🇺🇸" },
+      { nombre:"Guatemala",           codigo:"+502",   bandera:"🇬🇹" },
+      { nombre:"Honduras",            codigo:"+504",   bandera:"🇭🇳" },
+      { nombre:"México",              codigo:"+52",    bandera:"🇲🇽" },
+      { nombre:"Nicaragua",           codigo:"+505",   bandera:"🇳🇮" },
+      { nombre:"Panamá",              codigo:"+507",   bandera:"🇵🇦" },
+      { nombre:"Paraguay",            codigo:"+595",   bandera:"🇵🇾" },
+      { nombre:"Perú",                codigo:"+51",    bandera:"🇵🇪" },
+      { nombre:"Rep. Dominicana",     codigo:"+1-809", bandera:"🇩🇴" },
+      { nombre:"Uruguay",             codigo:"+598",   bandera:"🇺🇾" },
+      { nombre:"Venezuela",           codigo:"+58",    bandera:"🇻🇪" },
+    ];
+
+    /* ================================================================
+       ESTADO
+       ================================================================ */
+    let paisSeleccionado = PAISES[4]; // Colombia
+    let operadoCriptos  = null;       // true | false | null
+    let nivelSeleccionado = null;     // 'principiante' | 'intermedio' | 'avanzado'
+    let videoTerminado  = false;
+    let ultimoTiempo    = 0;
+
+    /* ================================================================
+       VIDEO — lógica de no-skip y controles
+       ================================================================ */
+    const video       = document.getElementById("mi-video");
+    const barra       = document.getElementById("barra-progreso");
+    const ctrlTime    = document.getElementById("ctrl-time");
+    const playOverlay = document.getElementById("play-overlay");
+    const endedOverlay= document.getElementById("ended-overlay");
+    const btnPlay     = document.getElementById("btn-play");
+    const btnMute     = document.getElementById("btn-mute");
+    const btnFs       = document.getElementById("btn-fs");
+
+    function fmt(s) {
+      s = Math.floor(s || 0);
+      return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+    }
+
+    video.addEventListener("loadedmetadata", () => {
+      ctrlTime.textContent = fmt(0) + " / " + fmt(video.duration);
+    });
+
+    video.addEventListener("timeupdate", () => {
+      // Prevenir avanzar: si el usuario intenta adelantar, lo regresamos
+      if (video.currentTime > ultimoTiempo + 0.5) {
+        video.currentTime = ultimoTiempo;
+        return;
+      }
+      ultimoTiempo = video.currentTime;
+      if (video.duration > 0) {
+        barra.style.width = (video.currentTime / video.duration * 100) + "%";
+        ctrlTime.textContent = fmt(video.currentTime) + " / " + fmt(video.duration);
+      }
+    });
+
+    video.addEventListener("ended", () => {
+      videoTerminado = true;
+      barra.style.width = "100%";
+      playOverlay.style.display = "none";
+      endedOverlay.style.display = "flex";
+      // Mostrar formulario
+      document.getElementById("locked-wrap").style.display   = "none";
+      document.getElementById("form-fields").style.display   = "block";
+      document.getElementById("cta-btn").disabled = false;
+      document.getElementById("cta-btn").classList.add("active");
+    });
+
+    video.addEventListener("play",  () => {
+      playOverlay.style.display = "none";
+      btnPlay.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>';
+    });
+    video.addEventListener("pause", () => {
+      if (!videoTerminado) playOverlay.style.display = "flex";
+      btnPlay.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+    });
+
+    document.getElementById("video-wrap").addEventListener("click", togglePlay);
+    btnPlay.addEventListener("click", (e) => { e.stopPropagation(); togglePlay(); });
+
+    function togglePlay() {
+      if (videoTerminado) return;
+      video.paused ? video.play() : video.pause();
+    }
+
+    btnMute.addEventListener("click", () => {
+      video.muted = !video.muted;
+      btnMute.innerHTML = video.muted
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97V10.18L16.45 12.63C16.48 12.43 16.5 12.21 16.5 12zM19 12C19 12.94 18.8 13.82 18.46 14.64L19.97 16.15C20.62 14.91 21 13.5 21 12C21 7.72 18.01 4.14 14 3.23V5.29C16.89 6.15 19 8.83 19 12zM4.27 3L3 4.27L7.73 9H3v6h4l5 5v-6.73l4.25 4.25C12.87 17.82 11.98 18.08 11 18.08c-1.38 0-2.63-.45-3.64-1.19L6 18.26C7.34 19.34 9.1 20 11 20c1.26 0 2.44-.3 3.48-.82L16.73 21.5L18 20.23L11 13.23L4.27 3zM11 5l-2.17 2.17L11 9.34V5z"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+    });
+
+    btnFs.addEventListener("click", () => {
+      document.fullscreenElement ? document.exitFullscreen() : video.requestFullscreen();
+    });
+
+    /* ================================================================
+       DROPDOWN DE PAÍSES
+       ================================================================ */
+    function renderPaises(filtro) {
+      const lista = document.getElementById("pais-list");
+      lista.innerHTML = "";
+      const filtrados = PAISES.filter(p =>
+        p.nombre.toLowerCase().includes(filtro.toLowerCase())
+      );
+      filtrados.forEach(p => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pais-item";
+        btn.innerHTML = `<span>${p.bandera}</span><span>${p.nombre}</span><span class="codigo">${p.codigo}</span>`;
+        btn.addEventListener("click", () => {
+          paisSeleccionado = p;
+          document.getElementById("pais-bandera").textContent = p.bandera;
+          const texto = (p.nombre.length > 10 ? p.nombre.slice(0,10) + "…" : p.nombre) + " " + p.codigo;
+          document.getElementById("pais-texto").textContent = texto;
+          document.getElementById("pais-dropdown").style.display = "none";
+        });
+        lista.appendChild(btn);
+      });
+    }
+
+    document.getElementById("pais-btn").addEventListener("click", () => {
+      const dd = document.getElementById("pais-dropdown");
+      const isOpen = dd.style.display !== "none";
+      dd.style.display = isOpen ? "none" : "block";
+      if (!isOpen) {
+        renderPaises("");
+        document.getElementById("pais-search").focus();
+      }
+    });
+    document.getElementById("pais-search").addEventListener("input", (e) => {
+      renderPaises(e.target.value);
+    });
+    // Close on click outside
+    document.addEventListener("click", (e) => {
+      if (!document.getElementById("pais-wrap").contains(e.target)) {
+        document.getElementById("pais-dropdown").style.display = "none";
+      }
+    });
+
+    /* ================================================================
+       TOGGLE BUTTONS
+       ================================================================ */
+    function setCriptos(val) {
+      operadoCriptos = val;
+      document.getElementById("btn-si").className = "toggle-btn" + (val === true  ? " active" : "");
+      document.getElementById("btn-no").className = "toggle-btn" + (val === false ? " active" : "");
+    }
+
+    function setNivel(n) {
+      nivelSeleccionado = n;
+      document.querySelectorAll("[onclick^='setNivel']").forEach(btn => {
+        btn.className = "toggle-btn" + (btn.getAttribute("onclick").includes("'"+n+"'") ? " active" : "");
+      });
+    }
+
+    /* ================================================================
+       ENVÍO DEL FORMULARIO → guarda en base de datos
+       ================================================================ */
+    document.getElementById("lead-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!videoTerminado) return;
+
+      const nombre    = document.getElementById("input-nombre").value.trim();
+      const whatsapp  = document.getElementById("input-whatsapp").value.trim();
+      const errorBox  = document.getElementById("error-box");
+
+      if (!nombre || !whatsapp || operadoCriptos === null || !nivelSeleccionado) {
+        errorBox.style.display = "block";
+        errorBox.textContent   = "Por favor completa todos los campos.";
+        return;
+      }
+      errorBox.style.display = "none";
+
+      const ctaBtn   = document.getElementById("cta-btn");
+      const ctaText  = document.getElementById("cta-text");
+      ctaBtn.disabled = true;
+      ctaText.textContent = "Enviando...";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre,
+            pais:          paisSeleccionado.nombre,
+            codigoPais:    paisSeleccionado.codigo,
+            whatsapp,
+            operadoCriptos,
+            nivel:         nivelSeleccionado,
+          }),
+        });
+        if (!res.ok) throw new Error("Error " + res.status);
+
+        // Mostrar éxito con countdown y redirect
+        document.getElementById("lead-form").style.display = "none";
+        document.getElementById("success-box").style.display = "block";
+        const WA_URL = "https://chat.whatsapp.com/HZUpfDE1vwc2BGOBrBevLJ?s=sw&p=i&mlu=3";
+        let secs = 3;
+        const numEl = document.getElementById("countdown-num");
+        const iv = setInterval(() => {
+          secs--;
+          if (secs > 0) { numEl.textContent = secs; }
+          else {
+            numEl.textContent = "✓";
+            clearInterval(iv);
+            window.location.href = WA_URL;
+          }
+        }, 1000);
+      } catch (err) {
+        errorBox.style.display = "block";
+        errorBox.textContent   = "Hubo un error al enviar. Intenta de nuevo.";
+        ctaBtn.disabled = false;
+        ctaText.textContent = "ENTRAR AL GRUPO";
+      }
+    });
+
+    // Init país display
+    document.getElementById("pais-texto").textContent =
+      paisSeleccionado.nombre + " " + paisSeleccionado.codigo;
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Flow — El Mercado Cambió</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ===================================================
+       CONFIGURACIÓN RÁPIDA — edita estos valores
+       =================================================== */
+    :root {
+      --verde:     #00e87a;   /* color de acento principal */
+      --azul:      #0066cc;
+      --fondo:     #050a0e;
+      --fondo2:    #0d1421;
+      --fondo3:    #0f1923;
+      --borde:     rgba(255,255,255,0.08);
+      --texto-sec: #8899aa;
+      --fuente:    'Inter', sans-serif;
+    }
+    /* ─────────────────── BASE ─────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--fuente);
+      background: var(--fondo);
+      color: #fff;
+      min-height: 100vh;
+    }
+    /* ─────────────────── GLOW BG ─────────────────── */
+    .glow-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .glow-bg::before {
+      content: "";
+      position: absolute; top: -10%; left: -15%;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(0,80,180,0.18) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .glow-bg::after {
+      content: "";
+      position: absolute; bottom: 5%; right: -10%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(0,180,80,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    /* ─────────────────── LAYOUT ─────────────────── */
+    .page-wrap {
+      position: relative; z-index: 1;
+      max-width: 620px; margin: 0 auto;
+      padding: 36px 16px 64px;
+    }
+    /* ─────────────────── LOGO ─────────────────── */
+    .logo-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #003a7a 0%, #005533 100%);
+      border: 2px solid rgba(0,200,100,0.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px;
+      box-shadow: 0 0 28px rgba(0,150,255,0.25);
+    }
+    .logo-text {
+      font-size: 1.5rem; font-weight: 800; letter-spacing: 3px;
+      background: linear-gradient(90deg,#fff 40%,var(--verde) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo-tagline {
+      font-size: 0.55rem; letter-spacing: 3px; color: #445566;
+      margin-top: 3px;
+    }
+    /* ─────────────────── HEADLINE ─────────────────── */
+    .headline {
+      font-size: clamp(1.8rem, 7vw, 2.7rem);
+      font-weight: 900; line-height: 1.1; letter-spacing: -0.5px;
+    }
+    .headline .green { color: var(--verde); }
+    .subtitle { color: var(--texto-sec); font-size: 0.95rem; }
+    /* ─────────────────── VIDEO PLAYER ─────────────────── */
+    .player-card {
+      background: #0d1117;
+      border: 1px solid rgba(0,150,255,0.15);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,100,200,0.12);
+    }
+    .player-badge-row {
+      padding: 10px 14px;
+    }
+    .player-badge {
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.72rem; color: #ccd;
+    }
+    .player-video-wrap {
+      position: relative; background: #000; cursor: pointer; user-select: none;
+    }
+    #mi-video {
+      width: 100%; display: block; max-height: 300px; object-fit: cover;
+    }
+    .play-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.25); transition: opacity 0.2s;
+    }
+    .play-btn-big {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-controls {
+      background: #0d1117; padding: 8px 14px;
+    }
+    .progress-track {
+      height: 3px; background: #1e2a35; border-radius: 2px;
+      margin-bottom: 8px; overflow: hidden;
+    }
+    #barra-progreso {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg,#00aaff,var(--verde));
+      border-radius: 2px; transition: width 0.4s ease;
+    }
+    .ctrl-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ctrl-btn {
+      background: none; border: none; color: #ccd; cursor: pointer;
+      padding: 2px; line-height: 0; transition: color 0.2s;
+    }
+    .ctrl-btn:hover { color: var(--verde); }
+    .ctrl-time {
+      font-size: 0.72rem; color: var(--texto-sec);
+      font-variant-numeric: tabular-nums;
+    }
+    /* ─────────────────── FORM CARD ─────────────────── */
+    .form-card {
+      background: var(--fondo3);
+      border: 1px solid var(--borde);
+      border-radius: 16px; padding: 28px 22px;
+    }
+    .form-title {
+      font-size: 1.15rem; font-weight: 800; letter-spacing: 1px; text-align: center;
+    }
+    .form-subtitle {
+      color: var(--texto-sec); font-size: 0.85rem; text-align: center; margin-top: 4px;
+    }
+    .field-input {
+      width: 100%;
+      background: #0a1520;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      color: #ddeeff;
+      padding: 12px 14px 12px 38px;
+      font-size: 0.9rem; font-family: var(--fuente);
+      outline: none; transition: border 0.2s;
+    }
+    .field-input:focus { border-color: rgba(0,220,120,0.4); }
+    .field-input::placeholder { color: #445566; }
+    .field-input:disabled { opacity: 0.4; cursor: not-allowed; }
+    .field-wrap { position: relative; }
+    .field-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); font-size: 0.9rem; color: var(--texto-sec);
+      pointer-events: none;
+    }
+    .toggle-btn {
+      flex: 1; padding: 11px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--borde);
+      background: rgba(255,255,255,0.03);
+      color: var(--texto-sec);
+      font-weight: 600; font-size: 0.88rem; font-family: var(--fuente);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      border-color: var(--verde);
+      background: rgba(0,220,120,0.12);
+      color: var(--verde);
+    }
+    .toggle-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+    .q-label {
+      font-size: 0.85rem; font-weight: 600; color: #ccddee; margin-bottom: 8px;
+    }
+    /* ─────────────────── COUNTRY DROPDOWN ─────────────────── */
+    .pais-btn {
+      width: 100%; background: #0a1520;
+      border: 1px solid var(--borde); border-radius: 8px;
+      color: #ddeeff; padding: 11px 12px;
+      font-size: 0.85rem; font-family: var(--fuente);
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: border 0.2s;
+    }
+    .pais-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pais-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--fondo3);
+      border: 1px solid rgba(0,200,100,0.2);
+      border-radius: 8px; z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+    .pais-search {
+      width: 100%; background: #0a1520;
+      border: none; border-bottom: 1px solid var(--borde);
+      color: #ddeeff; padding: 8px 12px;
+      font-size: 0.82rem; font-family: var(--fuente);
+      outline: none;
+    }
+    .pais-list {
+      max-height: 180px; overflow-y: auto;
+    }
+    .pais-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; cursor: pointer;
+      font-size: 0.83rem; color: #ddeeff;
+      background: none; border: none; width: 100%; text-align: left;
+    }
+    .pais-item:hover { background: rgba(0,220,100,0.08); }
+    .pais-item .codigo { margin-left: auto; color: var(--texto-sec); }
+    /* ─────────────────── LOCKED OVERLAY ─────────────────── */
+    .locked-wrap { position: relative; }
+    .locked-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; z-index: 10;
+    }
+    .locked-inner { filter: blur(2px) opacity(0.3); pointer-events: none; }
+    /* ─────────────────── CTA BUTTON ─────────────────── */
+    .cta-btn {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; padding: 16px 24px;
+      border-radius: 10px; border: none;
+      font-weight: 800; font-size: 1rem; letter-spacing: 1px;
+      font-family: var(--fuente);
+      cursor: not-allowed;
+      background: rgba(255,255,255,0.05);
+      color: #445566;
+      transition: all 0.3s ease;
+    }
+    .cta-btn.active {
+      background: linear-gradient(90deg,#00c060,var(--verde));
+      color: #fff; cursor: pointer;
+      box-shadow: 0 4px 24px rgba(0,200,100,0.3);
+    }
+    .cta-btn.active:hover { opacity: 0.9; transform: translateY(-1px); }
+    /* ─────────────────── SUCCESS ─────────────────── */
+    .success-box { text-align: center; padding: 40px 0; }
+    .success-box h2 { color: var(--verde); font-weight: 800; }
+    /* ─────────────────── ERROR ─────────────────── */
+    .error-box {
+      background: rgba(220,50,50,0.12);
+      border: 1px solid rgba(220,50,50,0.3);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.83rem; color: #ff8888;
+    }
+    /* ─────────────────── UTIL ─────────────────── */
+    .gap-10 { gap: 10px; }
+    .gap-8  { gap: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-20 { margin-top: 20px; }
+    .mt-24 { margin-top: 24px; }
+    .mt-28 { margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <div class="glow-bg"></div>
+
+  <div class="page-wrap">
+
+    <!-- ══ LOGO ══ -->
+    <div class="text-center mb-4">
+      <div class="logo-circle">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <ellipse cx="20" cy="20" rx="17" ry="17" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <path d="M20 3C20 3 28 10 28 20C28 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <path d="M20 3C20 3 12 10 12 20C12 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <path d="M3 20H37" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <path d="M33 12C31 9 27 6.5 23 5.5" stroke="rgba(0,220,120,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M33 12L29 10M33 12L31 16" stroke="rgba(0,220,120,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="12" y="25" fill="url(#gfGrad)" font-size="16" font-weight="bold" font-family="Arial">G</text>
+          <defs>
+            <linearGradient id="gfGrad" x1="12" y1="10" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#00aaff"/>
+              <stop offset="100%" stop-color="#00e87a"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="logo-text">GLOBAL FLOW</div>
+      <div class="logo-tagline">CONECTAMOS MERCADOS · CREAMOS OPORTUNIDADES</div>
+    </div>
+
+    <!-- ══ HEADLINE ══ -->
+    <div class="text-center mt-28 mb-4" style="margin-top:28px;margin-bottom:28px;">
+      <h1 class="headline">
+        EL <span class="green">MERCADO</span> CAMBIÓ.<br>
+        TU FORMA DE <span class="green">OPERAR</span> NO.
+      </h1>
+      <p class="subtitle mt-2">Mira el video y entiende por qué.</p>
+    </div>
+
+    <!-- ══ VIDEO PLAYER ══ -->
+    <div class="player-card mb-4" style="margin-bottom:22px;">
+      <div class="player-badge-row">
+        <span class="player-badge">🔒 Vídeo no saltable</span>
+      </div>
+
+      <div class="player-video-wrap" id="video-wrap">
+        <!--
+          ► CAMBIA EL VIDEO:
+            Reemplaza la URL del <source> con la URL de tu propio video.
+            También puedes cambiar el "poster" (imagen de portada).
+        -->
+        <video id="mi-video"
+          poster="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&q=80"
+          playsinline>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+          Tu navegador no soporta la reproducción de video.
+        </video>
+
+        <!-- Play overlay -->
+        <div class="play-overlay" id="play-overlay">
+          <div class="play-btn-big">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+
+        <!-- Ended overlay -->
+        <div class="play-overlay" id="ended-overlay" style="display:none;background:rgba(0,0,0,0.4);">
+          <div style="text-align:center;">
+            <div style="color:#00e87a;font-size:2rem;">✓</div>
+            <div style="font-weight:700;font-size:0.9rem;">Video completado</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="player-controls">
+        <div class="progress-track"><div id="barra-progreso"></div></div>
+        <div class="ctrl-row">
+          <button class="ctrl-btn" id="btn-play" title="Reproducir/Pausar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <span class="ctrl-time" id="ctrl-time">0:00 / 0:00</span>
+          <div style="flex:1"></div>
+          <button class="ctrl-btn" id="btn-mute" title="Silenciar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="btn-fs" title="Pantalla completa">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FORM CARD ══ -->
+    <div class="form-card">
+      <!-- SUCCESS STATE -->
+      <div class="success-box" id="success-box" style="display:none;">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 0 32px rgba(37,211,102,0.35);">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </div>
+        <h2>¡Registro exitoso!</h2>
+        <p style="color:#8899aa;margin-top:8px;">Tu información fue guardada. Serás redirigido al grupo en…</p>
+        <div id="countdown-circle" style="width:64px;height:64px;border-radius:50%;border:3px solid #00e87a;display:flex;align-items:center;justify-content:center;margin:16px auto;box-shadow:0 0 20px rgba(0,232,122,0.25);">
+          <span id="countdown-num" style="font-size:1.8rem;font-weight:800;color:#00e87a;line-height:1;">3</span>
+        </div>
+        <a href="https://chat.whatsapp.com/HZUpfDE1vwc2BGOBrBevLJ?s=sw&p=i&mlu=3" target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(90deg,#25d366,#128c7e);color:#fff;text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:800;font-size:0.95rem;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(37,211,102,0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Unirme al grupo ahora
+        </a>
+      </div>
+
+      <!-- FORM -->
+      <form id="lead-form">
+        <div class="form-title">👥 ACCESO AL GRUPO</div>
+        <div class="form-subtitle">Completa tus datos para entrar al grupo.</div>
+
+        <!-- Locked overlay (visible until video ends) -->
+        <div class="locked-wrap mt-20" id="locked-wrap" style="margin-top:20px;">
+          <div class="locked-inner" id="locked-inner">
+            <!-- Ghost fields for blur effect -->
+            <div style="display:flex;flex-direction:column;gap:12px;pointer-events:none;">
+              <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+                <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+              </div>
+              <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+              <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+            </div>
+          </div>
+          <div class="locked-overlay" id="locked-overlay">
+            <div style="font-size:2rem;">🔒</div>
+            <div style="font-weight:700;color:#ccd;">Mira el video completo</div>
+            <div style="font-size:0.8rem;color:#8899aa;">para desbloquear el formulario</div>
+          </div>
+        </div>
+
+        <!-- Real fields (hidden until video ends) -->
+        <div id="form-fields" style="display:none;margin-top:20px;">
+
+          <!-- Nombre -->
+          <div class="field-wrap">
+            <span class="field-icon">👤</span>
+            <input id="input-nombre" class="field-input block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer" placeholder=" "required" type="text" placeholder="Nombre y apellido" required />
+          </div>
+
+          <!-- País + WhatsApp -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+            <!-- País dropdown -->
+            <div style="position:relative;" id="pais-wrap">
+              <button type="button" class="pais-btn" id="pais-btn">
+                <span id="pais-bandera">🇨🇴</span>
+                <span id="pais-texto">Colombia +57</span>
+                <span style="margin-left:auto;color:#556677;font-size:0.7rem;">▾</span>
+              </button>
+              <div class="pais-dropdown" id="pais-dropdown" style="display:none;">
+                <input class="pais-search" id="pais-search" placeholder="Buscar país..." />
+                <div class="pais-list" id="pais-list"></div>
+              </div>
+            </div>
+            <!-- WhatsApp -->
+            <div class="field-wrap">
+              <span class="field-icon">💬</span>
+              <input id="input-whatsapp" class="field-input" type="tel" placeholder="Número de WhatsApp" required />
+            </div>
+          </div>
+
+          <!-- Criptos -->
+          <div style="margin-top:16px;">
+            <div class="q-label">¿Has operado con criptomonedas?</div>
+            <div style="display:flex;gap:10px;">
+              <button type="button" class="toggle-btn" id="btn-si" onclick="setCriptos(true)">
+                <span>✓</span> Sí
+              </button>
+              <button type="button" class="toggle-btn" id="btn-no" onclick="setCriptos(false)">
+                <span>○</span> No
+              </button>
+            </div>
+          </div>
+
+          <!-- Nivel -->
+          <div style="margin-top:16px;">
+            <div class="q-label">¿Qué nivel consideras que tienes?</div>
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="toggle-btn" onclick="setNivel('principiante')">📊 Principiante</button>
+              <button type="button" class="toggle-btn" onclick="setNivel('intermedio')">📊 Intermedio</button>
+              <button type="button" class="toggle-btn" onclick="setNivel('avanzado')">📊 Avanzado</button>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div class="error-box mt-12" id="error-box" style="display:none;margin-top:12px;"></div>
+
+        </div><!-- /form-fields -->
+
+        <!-- CTA -->
+        <button type="submit" class="cta-btn" id="cta-btn" style="margin-top:20px;" disabled>
           <span id="cta-text">ENTRAR AL GRUPO</span>
           <span>→</span>
         </button>
@@ -1146,6 +1874,734 @@
           <div class="field-wrap">
             <span class="field-icon">👤</span>
             <input id="input-nombre" class="field-input" type="text" placeholder="Nombre y apellido" required />
+          </div>
+
+          <!-- País + WhatsApp -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;">
+            <!-- País dropdown -->
+            <div style="position:relative;" id="pais-wrap">
+              <button type="button" class="pais-btn" id="pais-btn">
+                <span id="pais-bandera">🇨🇴</span>
+                <span id="pais-texto">Colombia +57</span>
+                <span style="margin-left:auto;color:#556677;font-size:0.7rem;">▾</span>
+              </button>
+              <div class="pais-dropdown" id="pais-dropdown" style="display:none;">
+                <input class="pais-search" id="pais-search" placeholder="Buscar país..." />
+                <div class="pais-list" id="pais-list"></div>
+              </div>
+            </div>
+            <!-- WhatsApp -->
+            <div class="field-wrap">
+              <span class="field-icon">💬</span>
+              <input id="input-whatsapp" class="field-input" type="tel" placeholder="Número de WhatsApp" required />
+            </div>
+          </div>
+
+          <!-- Criptos -->
+          <div style="margin-top:16px;">
+            <div class="q-label">¿Has operado con criptomonedas?</div>
+            <div style="display:flex;gap:10px;">
+              <button type="button" class="toggle-btn" id="btn-si" onclick="setCriptos(true)">
+                <span>✓</span> Sí
+              </button>
+              <button type="button" class="toggle-btn" id="btn-no" onclick="setCriptos(false)">
+                <span>○</span> No
+              </button>
+            </div>
+          </div>
+
+          <!-- Nivel -->
+          <div style="margin-top:16px;">
+            <div class="q-label">¿Qué nivel consideras que tienes?</div>
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="toggle-btn" onclick="setNivel('principiante')">📊 Principiante</button>
+              <button type="button" class="toggle-btn" onclick="setNivel('intermedio')">📊 Intermedio</button>
+              <button type="button" class="toggle-btn" onclick="setNivel('avanzado')">📊 Avanzado</button>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div class="error-box mt-12" id="error-box" style="display:none;margin-top:12px;"></div>
+
+        </div><!-- /form-fields -->
+
+        <!-- CTA -->
+        <button type="submit" class="cta-btn" id="cta-btn" style="margin-top:20px;" disabled>
+          <span id="cta-text">ENTRAR AL GRUPO</span>
+          <span>→</span>
+        </button>
+      </form>
+    </div><!-- /form-card -->
+
+  </div><!-- /page-wrap -->
+
+  <script>
+    /* ================================================================
+       CONFIGURACIÓN — edita estos valores
+       ================================================================ */
+
+    // ► URL de tu API para guardar los leads.
+    //   Si usas este HTML junto con el servidor Express, pon la URL completa,
+    //   por ejemplo: "https://tu-dominio.replit.app/api/leads"
+    const API_URL = "/api/leads";
+
+    // ► Lista de países con código de marcado
+    const PAISES = [
+      { nombre:"Argentina",           codigo:"+54",    bandera:"🇦🇷" },
+      { nombre:"Bolivia",             codigo:"+591",   bandera:"🇧🇴" },
+      { nombre:"Brasil",              codigo:"+55",    bandera:"🇧🇷" },
+      { nombre:"Chile",               codigo:"+56",    bandera:"🇨🇱" },
+      { nombre:"Colombia",            codigo:"+57",    bandera:"🇨🇴" },
+      { nombre:"Costa Rica",          codigo:"+506",   bandera:"🇨🇷" },
+      { nombre:"Cuba",                codigo:"+53",    bandera:"🇨🇺" },
+      { nombre:"Ecuador",             codigo:"+593",   bandera:"🇪🇨" },
+      { nombre:"El Salvador",         codigo:"+503",   bandera:"🇸🇻" },
+      { nombre:"España",              codigo:"+34",    bandera:"🇪🇸" },
+      { nombre:"Estados Unidos",      codigo:"+1",     bandera:"🇺🇸" },
+      { nombre:"Guatemala",           codigo:"+502",   bandera:"🇬🇹" },
+      { nombre:"Honduras",            codigo:"+504",   bandera:"🇭🇳" },
+      { nombre:"México",              codigo:"+52",    bandera:"🇲🇽" },
+      { nombre:"Nicaragua",           codigo:"+505",   bandera:"🇳🇮" },
+      { nombre:"Panamá",              codigo:"+507",   bandera:"🇵🇦" },
+      { nombre:"Paraguay",            codigo:"+595",   bandera:"🇵🇾" },
+      { nombre:"Perú",                codigo:"+51",    bandera:"🇵🇪" },
+      { nombre:"Rep. Dominicana",     codigo:"+1-809", bandera:"🇩🇴" },
+      { nombre:"Uruguay",             codigo:"+598",   bandera:"🇺🇾" },
+      { nombre:"Venezuela",           codigo:"+58",    bandera:"🇻🇪" },
+    ];
+
+    /* ================================================================
+       ESTADO
+       ================================================================ */
+    let paisSeleccionado = PAISES[4]; // Colombia
+    let operadoCriptos  = null;       // true | false | null
+    let nivelSeleccionado = null;     // 'principiante' | 'intermedio' | 'avanzado'
+    let videoTerminado  = false;
+    let ultimoTiempo    = 0;
+
+    /* ================================================================
+       VIDEO — lógica de no-skip y controles
+       ================================================================ */
+    const video       = document.getElementById("mi-video");
+    const barra       = document.getElementById("barra-progreso");
+    const ctrlTime    = document.getElementById("ctrl-time");
+    const playOverlay = document.getElementById("play-overlay");
+    const endedOverlay= document.getElementById("ended-overlay");
+    const btnPlay     = document.getElementById("btn-play");
+    const btnMute     = document.getElementById("btn-mute");
+    const btnFs       = document.getElementById("btn-fs");
+
+    function fmt(s) {
+      s = Math.floor(s || 0);
+      return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+    }
+
+    video.addEventListener("loadedmetadata", () => {
+      ctrlTime.textContent = fmt(0) + " / " + fmt(video.duration);
+    });
+
+    video.addEventListener("timeupdate", () => {
+      // Prevenir avanzar: si el usuario intenta adelantar, lo regresamos
+      if (video.currentTime > ultimoTiempo + 0.5) {
+        video.currentTime = ultimoTiempo;
+        return;
+      }
+      ultimoTiempo = video.currentTime;
+      if (video.duration > 0) {
+        barra.style.width = (video.currentTime / video.duration * 100) + "%";
+        ctrlTime.textContent = fmt(video.currentTime) + " / " + fmt(video.duration);
+      }
+    });
+
+    video.addEventListener("ended", () => {
+      videoTerminado = true;
+      barra.style.width = "100%";
+      playOverlay.style.display = "none";
+      endedOverlay.style.display = "flex";
+      // Mostrar formulario
+      document.getElementById("locked-wrap").style.display   = "none";
+      document.getElementById("form-fields").style.display   = "block";
+      document.getElementById("cta-btn").disabled = false;
+      document.getElementById("cta-btn").classList.add("active");
+    });
+
+    video.addEventListener("play",  () => {
+      playOverlay.style.display = "none";
+      btnPlay.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>';
+    });
+    video.addEventListener("pause", () => {
+      if (!videoTerminado) playOverlay.style.display = "flex";
+      btnPlay.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+    });
+
+    document.getElementById("video-wrap").addEventListener("click", togglePlay);
+    btnPlay.addEventListener("click", (e) => { e.stopPropagation(); togglePlay(); });
+
+    function togglePlay() {
+      if (videoTerminado) return;
+      video.paused ? video.play() : video.pause();
+    }
+
+    btnMute.addEventListener("click", () => {
+      video.muted = !video.muted;
+      btnMute.innerHTML = video.muted
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97V10.18L16.45 12.63C16.48 12.43 16.5 12.21 16.5 12zM19 12C19 12.94 18.8 13.82 18.46 14.64L19.97 16.15C20.62 14.91 21 13.5 21 12C21 7.72 18.01 4.14 14 3.23V5.29C16.89 6.15 19 8.83 19 12zM4.27 3L3 4.27L7.73 9H3v6h4l5 5v-6.73l4.25 4.25C12.87 17.82 11.98 18.08 11 18.08c-1.38 0-2.63-.45-3.64-1.19L6 18.26C7.34 19.34 9.1 20 11 20c1.26 0 2.44-.3 3.48-.82L16.73 21.5L18 20.23L11 13.23L4.27 3zM11 5l-2.17 2.17L11 9.34V5z"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+    });
+
+    btnFs.addEventListener("click", () => {
+      document.fullscreenElement ? document.exitFullscreen() : video.requestFullscreen();
+    });
+
+    /* ================================================================
+       DROPDOWN DE PAÍSES
+       ================================================================ */
+    function renderPaises(filtro) {
+      const lista = document.getElementById("pais-list");
+      lista.innerHTML = "";
+      const filtrados = PAISES.filter(p =>
+        p.nombre.toLowerCase().includes(filtro.toLowerCase())
+      );
+      filtrados.forEach(p => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pais-item";
+        btn.innerHTML = `<span>${p.bandera}</span><span>${p.nombre}</span><span class="codigo">${p.codigo}</span>`;
+        btn.addEventListener("click", () => {
+          paisSeleccionado = p;
+          document.getElementById("pais-bandera").textContent = p.bandera;
+          const texto = (p.nombre.length > 10 ? p.nombre.slice(0,10) + "…" : p.nombre) + " " + p.codigo;
+          document.getElementById("pais-texto").textContent = texto;
+          document.getElementById("pais-dropdown").style.display = "none";
+        });
+        lista.appendChild(btn);
+      });
+    }
+
+    document.getElementById("pais-btn").addEventListener("click", () => {
+      const dd = document.getElementById("pais-dropdown");
+      const isOpen = dd.style.display !== "none";
+      dd.style.display = isOpen ? "none" : "block";
+      if (!isOpen) {
+        renderPaises("");
+        document.getElementById("pais-search").focus();
+      }
+    });
+    document.getElementById("pais-search").addEventListener("input", (e) => {
+      renderPaises(e.target.value);
+    });
+    // Close on click outside
+    document.addEventListener("click", (e) => {
+      if (!document.getElementById("pais-wrap").contains(e.target)) {
+        document.getElementById("pais-dropdown").style.display = "none";
+      }
+    });
+
+    /* ================================================================
+       TOGGLE BUTTONS
+       ================================================================ */
+    function setCriptos(val) {
+      operadoCriptos = val;
+      document.getElementById("btn-si").className = "toggle-btn" + (val === true  ? " active" : "");
+      document.getElementById("btn-no").className = "toggle-btn" + (val === false ? " active" : "");
+    }
+
+    function setNivel(n) {
+      nivelSeleccionado = n;
+      document.querySelectorAll("[onclick^='setNivel']").forEach(btn => {
+        btn.className = "toggle-btn" + (btn.getAttribute("onclick").includes("'"+n+"'") ? " active" : "");
+      });
+    }
+
+    /* ================================================================
+       ENVÍO DEL FORMULARIO → guarda en base de datos
+       ================================================================ */
+    document.getElementById("lead-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!videoTerminado) return;
+
+      const nombre    = document.getElementById("input-nombre").value.trim();
+      const whatsapp  = document.getElementById("input-whatsapp").value.trim();
+      const errorBox  = document.getElementById("error-box");
+
+      if (!nombre || !whatsapp || operadoCriptos === null || !nivelSeleccionado) {
+        errorBox.style.display = "block";
+        errorBox.textContent   = "Por favor completa todos los campos.";
+        return;
+      }
+      errorBox.style.display = "none";
+
+      const ctaBtn   = document.getElementById("cta-btn");
+      const ctaText  = document.getElementById("cta-text");
+      ctaBtn.disabled = true;
+      ctaText.textContent = "Enviando...";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nombre,
+            pais:          paisSeleccionado.nombre,
+            codigoPais:    paisSeleccionado.codigo,
+            whatsapp,
+            operadoCriptos,
+            nivel:         nivelSeleccionado,
+          }),
+        });
+        if (!res.ok) throw new Error("Error " + res.status);
+
+        // Mostrar éxito con countdown y redirect
+        document.getElementById("lead-form").style.display = "none";
+        document.getElementById("success-box").style.display = "block";
+        const WA_URL = "https://chat.whatsapp.com/HZUpfDE1vwc2BGOBrBevLJ?s=sw&p=i&mlu=3";
+        let secs = 3;
+        const numEl = document.getElementById("countdown-num");
+        const iv = setInterval(() => {
+          secs--;
+          if (secs > 0) { numEl.textContent = secs; }
+          else {
+            numEl.textContent = "✓";
+            clearInterval(iv);
+            window.location.href = WA_URL;
+          }
+        }, 1000);
+      } catch (err) {
+        errorBox.style.display = "block";
+        errorBox.textContent   = "Hubo un error al enviar. Intenta de nuevo.";
+        ctaBtn.disabled = false;
+        ctaText.textContent = "ENTRAR AL GRUPO";
+      }
+    });
+
+    // Init país display
+    document.getElementById("pais-texto").textContent =
+      paisSeleccionado.nombre + " " + paisSeleccionado.codigo;
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Global Flow — El Mercado Cambió</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ===================================================
+       CONFIGURACIÓN RÁPIDA — edita estos valores
+       =================================================== */
+    :root {
+      --verde:     #00e87a;   /* color de acento principal */
+      --azul:      #0066cc;
+      --fondo:     #050a0e;
+      --fondo2:    #0d1421;
+      --fondo3:    #0f1923;
+      --borde:     rgba(255,255,255,0.08);
+      --texto-sec: #8899aa;
+      --fuente:    'Inter', sans-serif;
+    }
+    /* ─────────────────── BASE ─────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--fuente);
+      background: var(--fondo);
+      color: #fff;
+      min-height: 100vh;
+    }
+    /* ─────────────────── GLOW BG ─────────────────── */
+    .glow-bg {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .glow-bg::before {
+      content: "";
+      position: absolute; top: -10%; left: -15%;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(0,80,180,0.18) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .glow-bg::after {
+      content: "";
+      position: absolute; bottom: 5%; right: -10%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(0,180,80,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    /* ─────────────────── LAYOUT ─────────────────── */
+    .page-wrap {
+      position: relative; z-index: 1;
+      max-width: 620px; margin: 0 auto;
+      padding: 36px 16px 64px;
+    }
+    /* ─────────────────── LOGO ─────────────────── */
+    .logo-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #003a7a 0%, #005533 100%);
+      border: 2px solid rgba(0,200,100,0.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px;
+      box-shadow: 0 0 28px rgba(0,150,255,0.25);
+    }
+    .logo-text {
+      font-size: 1.5rem; font-weight: 800; letter-spacing: 3px;
+      background: linear-gradient(90deg,#fff 40%,var(--verde) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo-tagline {
+      font-size: 0.55rem; letter-spacing: 3px; color: #445566;
+      margin-top: 3px;
+    }
+    /* ─────────────────── HEADLINE ─────────────────── */
+    .headline {
+      font-size: clamp(1.8rem, 7vw, 2.7rem);
+      font-weight: 900; line-height: 1.1; letter-spacing: -0.5px;
+    }
+    .headline .green { color: var(--verde); }
+    .subtitle { color: var(--texto-sec); font-size: 0.95rem; }
+    /* ─────────────────── VIDEO PLAYER ─────────────────── */
+    .player-card {
+      background: #0d1117;
+      border: 1px solid rgba(0,150,255,0.15);
+      border-radius: 14px; overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,100,200,0.12);
+    }
+    .player-badge-row {
+      padding: 10px 14px;
+    }
+    .player-badge {
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.72rem; color: #ccd;
+    }
+    .player-video-wrap {
+      position: relative; background: #000; cursor: pointer; user-select: none;
+    }
+    #mi-video {
+      width: 100%; display: block; max-height: 300px; object-fit: cover;
+    }
+    .play-overlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.25); transition: opacity 0.2s;
+    }
+    .play-btn-big {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.3);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .player-controls {
+      background: #0d1117; padding: 8px 14px;
+    }
+    .progress-track {
+      height: 3px; background: #1e2a35; border-radius: 2px;
+      margin-bottom: 8px; overflow: hidden;
+    }
+    #barra-progreso {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg,#00aaff,var(--verde));
+      border-radius: 2px; transition: width 0.4s ease;
+    }
+    .ctrl-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ctrl-btn {
+      background: none; border: none; color: #ccd; cursor: pointer;
+      padding: 2px; line-height: 0; transition: color 0.2s;
+    }
+    .ctrl-btn:hover { color: var(--verde); }
+    .ctrl-time {
+      font-size: 0.72rem; color: var(--texto-sec);
+      font-variant-numeric: tabular-nums;
+    }
+    /* ─────────────────── FORM CARD ─────────────────── */
+    .form-card {
+      background: var(--fondo3);
+      border: 1px solid var(--borde);
+      border-radius: 16px; padding: 28px 22px;
+    }
+    .form-title {
+      font-size: 1.15rem; font-weight: 800; letter-spacing: 1px; text-align: center;
+    }
+    .form-subtitle {
+      color: var(--texto-sec); font-size: 0.85rem; text-align: center; margin-top: 4px;
+    }
+    .field-input {
+      width: 100%;
+      background: #0a1520;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      color: #ddeeff;
+      padding: 12px 14px 12px 38px;
+      font-size: 0.9rem; font-family: var(--fuente);
+      outline: none; transition: border 0.2s;
+    }
+    .field-input:focus { border-color: rgba(0,220,120,0.4); }
+    .field-input::placeholder { color: #445566; }
+    .field-input:disabled { opacity: 0.4; cursor: not-allowed; }
+    .field-wrap { position: relative; }
+    .field-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); font-size: 0.9rem; color: var(--texto-sec);
+      pointer-events: none;
+    }
+    .toggle-btn {
+      flex: 1; padding: 11px 8px;
+      border-radius: 8px;
+      border: 1px solid var(--borde);
+      background: rgba(255,255,255,0.03);
+      color: var(--texto-sec);
+      font-weight: 600; font-size: 0.88rem; font-family: var(--fuente);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      border-color: var(--verde);
+      background: rgba(0,220,120,0.12);
+      color: var(--verde);
+    }
+    .toggle-btn:disabled { cursor: not-allowed; opacity: 0.4; }
+    .q-label {
+      font-size: 0.85rem; font-weight: 600; color: #ccddee; margin-bottom: 8px;
+    }
+    /* ─────────────────── COUNTRY DROPDOWN ─────────────────── */
+    .pais-btn {
+      width: 100%; background: #0a1520;
+      border: 1px solid var(--borde); border-radius: 8px;
+      color: #ddeeff; padding: 11px 12px;
+      font-size: 0.85rem; font-family: var(--fuente);
+      cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: border 0.2s;
+    }
+    .pais-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pais-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: var(--fondo3);
+      border: 1px solid rgba(0,200,100,0.2);
+      border-radius: 8px; z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+    .pais-search {
+      width: 100%; background: #0a1520;
+      border: none; border-bottom: 1px solid var(--borde);
+      color: #ddeeff; padding: 8px 12px;
+      font-size: 0.82rem; font-family: var(--fuente);
+      outline: none;
+    }
+    .pais-list {
+      max-height: 180px; overflow-y: auto;
+    }
+    .pais-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 12px; cursor: pointer;
+      font-size: 0.83rem; color: #ddeeff;
+      background: none; border: none; width: 100%; text-align: left;
+    }
+    .pais-item:hover { background: rgba(0,220,100,0.08); }
+    .pais-item .codigo { margin-left: auto; color: var(--texto-sec); }
+    /* ─────────────────── LOCKED OVERLAY ─────────────────── */
+    .locked-wrap { position: relative; }
+    .locked-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; z-index: 10;
+    }
+    .locked-inner { filter: blur(2px) opacity(0.3); pointer-events: none; }
+    /* ─────────────────── CTA BUTTON ─────────────────── */
+    .cta-btn {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; padding: 16px 24px;
+      border-radius: 10px; border: none;
+      font-weight: 800; font-size: 1rem; letter-spacing: 1px;
+      font-family: var(--fuente);
+      cursor: not-allowed;
+      background: rgba(255,255,255,0.05);
+      color: #445566;
+      transition: all 0.3s ease;
+    }
+    .cta-btn.active {
+      background: linear-gradient(90deg,#00c060,var(--verde));
+      color: #fff; cursor: pointer;
+      box-shadow: 0 4px 24px rgba(0,200,100,0.3);
+    }
+    .cta-btn.active:hover { opacity: 0.9; transform: translateY(-1px); }
+    /* ─────────────────── SUCCESS ─────────────────── */
+    .success-box { text-align: center; padding: 40px 0; }
+    .success-box h2 { color: var(--verde); font-weight: 800; }
+    /* ─────────────────── ERROR ─────────────────── */
+    .error-box {
+      background: rgba(220,50,50,0.12);
+      border: 1px solid rgba(220,50,50,0.3);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.83rem; color: #ff8888;
+    }
+    /* ─────────────────── UTIL ─────────────────── */
+    .gap-10 { gap: 10px; }
+    .gap-8  { gap: 8px; }
+    .mt-12 { margin-top: 12px; }
+    .mt-16 { margin-top: 16px; }
+    .mt-20 { margin-top: 20px; }
+    .mt-24 { margin-top: 24px; }
+    .mt-28 { margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <div class="glow-bg"></div>
+
+  <div class="page-wrap">
+
+    <!-- ══ LOGO ══ -->
+    <div class="text-center mb-4">
+      <div class="logo-circle">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <ellipse cx="20" cy="20" rx="17" ry="17" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <path d="M20 3C20 3 28 10 28 20C28 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <path d="M20 3C20 3 12 10 12 20C12 30 20 37 20 37" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+          <path d="M3 20H37" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <path d="M33 12C31 9 27 6.5 23 5.5" stroke="rgba(0,220,120,0.5)" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M33 12L29 10M33 12L31 16" stroke="rgba(0,220,120,0.8)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="12" y="25" fill="url(#gfGrad)" font-size="16" font-weight="bold" font-family="Arial">G</text>
+          <defs>
+            <linearGradient id="gfGrad" x1="12" y1="10" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#00aaff"/>
+              <stop offset="100%" stop-color="#00e87a"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="logo-text">GLOBAL FLOW</div>
+      <div class="logo-tagline">CONECTAMOS MERCADOS · CREAMOS OPORTUNIDADES</div>
+    </div>
+
+    <!-- ══ HEADLINE ══ -->
+    <div class="text-center mt-28 mb-4" style="margin-top:28px;margin-bottom:28px;">
+      <h1 class="headline">
+        EL <span class="green">MERCADO</span> CAMBIÓ.<br>
+        TU FORMA DE <span class="green">OPERAR</span> NO.
+      </h1>
+      <p class="subtitle mt-2">Mira el video y entiende por qué.</p>
+    </div>
+
+    <!-- ══ VIDEO PLAYER ══ -->
+    <div class="player-card mb-4" style="margin-bottom:22px;">
+      <div class="player-badge-row">
+        <span class="player-badge">🔒 Vídeo no saltable</span>
+      </div>
+
+      <div class="player-video-wrap" id="video-wrap">
+        <!--
+          ► CAMBIA EL VIDEO:
+            Reemplaza la URL del <source> con la URL de tu propio video.
+            También puedes cambiar el "poster" (imagen de portada).
+        -->
+        <video id="mi-video"
+          poster="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=900&q=80"
+          playsinline>
+          <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+          Tu navegador no soporta la reproducción de video.
+        </video>
+
+        <!-- Play overlay -->
+        <div class="play-overlay" id="play-overlay">
+          <div class="play-btn-big">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+
+        <!-- Ended overlay -->
+        <div class="play-overlay" id="ended-overlay" style="display:none;background:rgba(0,0,0,0.4);">
+          <div style="text-align:center;">
+            <div style="color:#00e87a;font-size:2rem;">✓</div>
+            <div style="font-weight:700;font-size:0.9rem;">Video completado</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="player-controls">
+        <div class="progress-track"><div id="barra-progreso"></div></div>
+        <div class="ctrl-row">
+          <button class="ctrl-btn" id="btn-play" title="Reproducir/Pausar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <span class="ctrl-time" id="ctrl-time">0:00 / 0:00</span>
+          <div style="flex:1"></div>
+          <button class="ctrl-btn" id="btn-mute" title="Silenciar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="btn-fs" title="Pantalla completa">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FORM CARD ══ -->
+    <div class="form-card">
+      <!-- SUCCESS STATE -->
+      <div class="success-box" id="success-box" style="display:none;">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:0 0 32px rgba(37,211,102,0.35);">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </div>
+        <h2>¡Registro exitoso!</h2>
+        <p style="color:#8899aa;margin-top:8px;">Tu información fue guardada. Serás redirigido al grupo en…</p>
+        <div id="countdown-circle" style="width:64px;height:64px;border-radius:50%;border:3px solid #00e87a;display:flex;align-items:center;justify-content:center;margin:16px auto;box-shadow:0 0 20px rgba(0,232,122,0.25);">
+          <span id="countdown-num" style="font-size:1.8rem;font-weight:800;color:#00e87a;line-height:1;">3</span>
+        </div>
+        <a href="https://chat.whatsapp.com/HZUpfDE1vwc2BGOBrBevLJ?s=sw&p=i&mlu=3" target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(90deg,#25d366,#128c7e);color:#fff;text-decoration:none;padding:13px 28px;border-radius:10px;font-weight:800;font-size:0.95rem;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(37,211,102,0.3);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Unirme al grupo ahora
+        </a>
+      </div>
+
+      <!-- FORM -->
+      <form id="lead-form" class="form-floating">
+        <div class="form-title">👥 ACCESO AL GRUPO</div>
+        <div class="form-subtitle">Completa tus datos para entrar al grupo.</div>
+
+        <!-- Locked overlay (visible until video ends) -->
+        <div class="locked-wrap mt-20" id="locked-wrap" style="margin-top:20px;">
+          <div class="locked-inner" id="locked-inner">
+            <!-- Ghost fields for blur effect -->
+            <div style="display:flex;flex-direction:column;gap:12px;pointer-events:none;">
+              <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+                <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+              </div>
+              <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+              <div style="background:#0a1520;border:1px solid rgba(255,255,255,0.08);border-radius:8px;height:46px;"></div>
+            </div>
+          </div>
+          <div class="locked-overlay" id="locked-overlay">
+            <div style="font-size:2rem;">🔒</div>
+            <div style="font-weight:700;color:#ccd;">Mira el video completo</div>
+            <div style="font-size:0.8rem;color:#8899aa;">para desbloquear el formulario</div>
+          </div>
+        </div>
+
+        <!-- Real fields (hidden until video ends) -->
+        <div id="form-fields" style="display:none;margin-top:20px;">
+
+          <!-- Nombre -->
+          <div class="field-wrap">
+            <span class="field-icon">👤</span>
+            <input id="input-nombre" class="field-input block py-2.5 px-0 w-full text-sm text-heading bg-transparent border-0 border-b-2 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer" placeholder=" "required" type="text" placeholder="Nombre y apellido" required />
           </div>
 
           <!-- País + WhatsApp -->
