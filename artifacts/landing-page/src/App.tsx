@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import "./form.css";
 
 declare global {
   interface Window {
@@ -268,11 +269,11 @@ export default function App() {
         </div>
 
         {/* ── FORM CARD ── */}
-        <div style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, padding: "28px 24px" }}>
+        <div className="premium-form-card">
           {enviado ? (
             <SuccessRedirect />
           ) : (
-            <form onSubmit={handleSubmit}>
+            <form className="premium-form" onSubmit={handleSubmit}>
               {/* Form title */}
               <div style={{ textAlign: "center", marginBottom: 22 }}>
                 <div style={{ fontSize: "1.2rem", fontWeight: 800, letterSpacing: 1 }}>
@@ -306,16 +307,7 @@ export default function App() {
               <button
                 type="submit"
                 disabled={enviando}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  width: "100%", marginTop: 20, padding: "16px 24px",
-                  borderRadius: 10, border: "none", fontWeight: 800, fontSize: "1rem", letterSpacing: 1,
-                  cursor: enviando ? "not-allowed" : "pointer",
-                  background: enviando ? "rgba(0,180,80,0.5)" : "linear-gradient(90deg,#00c060,#00e87a)",
-                  color: "#fff",
-                  transition: "all 0.3s ease",
-                  boxShadow: "0 4px 24px rgba(0,200,100,0.3)",
-                }}
+                className="premium-submit"
               >
                 <span>{enviando ? "Enviando..." : "ENTRAR AL GRUPO"}</span>
                 <span style={{ fontSize: "1.2rem" }}>→</span>
@@ -393,8 +385,7 @@ interface FormFieldsProps {
 
 function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, buscarPais, setBuscarPais, paisesFiltrados, whatsapp, setWhatsapp, operadoCriptos, setOperadoCriptos, nivel, setNivel, disabled }: FormFieldsProps) {
   const inputStyle: React.CSSProperties = {
-    width: "100%", background: "#0a1520", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
-    color: "#ddeeff", padding: "12px 14px", fontSize: "0.9rem", outline: "none",
+    width: "100%", padding: "12px 14px", fontSize: "0.9rem",
     boxSizing: "border-box",
   };
 
@@ -412,14 +403,14 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
         <input
           type="text"
           id="nombre"
-          className="form-control"
+          className="form-control premium-input"
           placeholder="Nombre y apellido"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           disabled={disabled}
           style={{ ...inputStyle, height: 54, padding: "1.5rem 14px 0.45rem" }}
         />
-        <label htmlFor="nombre" style={{ color: "#8899aa", fontSize: "0.85rem" }}>Nombre y apellido</label>
+        <label htmlFor="nombre">Nombre y apellido</label>
       </div>
 
       {/* País + WhatsApp */}
@@ -428,6 +419,9 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
           <button
             type="button"
             onClick={() => !disabled && setPaisOpen(!paisOpen)}
+            className="premium-country"
+            aria-label={`País: ${pais.nombre} ${pais.codigo}. Cambiar país`}
+            aria-expanded={paisOpen}
             style={{ ...inputStyle, display: "flex", alignItems: "center", gap: 8, cursor: disabled ? "not-allowed" : "pointer", height: 54 }}
           >
             <span style={{ fontSize: "1rem" }}>{pais.bandera}</span>
@@ -435,12 +429,13 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
             <span style={{ marginLeft: "auto", color: "#556677", fontSize: "0.7rem" }}>▾</span>
           </button>
           {paisOpen && !disabled && (
-            <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0f1923", border: "1px solid rgba(0,200,100,0.2)", borderRadius: 8, zIndex: 50, maxHeight: 220, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+            <div className="premium-country-menu" style={{ position: "absolute", top: "100%", left: 0, right: 0, borderRadius: 8, zIndex: 50, maxHeight: 220, overflow: "hidden" }}>
               <div style={{ padding: "8px 8px 4px" }}>
                 <input
                   placeholder="Buscar país..."
                   value={buscarPais}
                   onChange={(e) => setBuscarPais(e.target.value)}
+                  className="premium-search"
                   style={{ ...inputStyle, fontSize: "0.8rem", padding: "7px 10px" }}
                   autoFocus
                 />
@@ -451,7 +446,8 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
                     key={p.nombre}
                     type="button"
                     onClick={() => { setPais(p); setPaisOpen(false); setBuscarPais(""); }}
-                    style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", background: "none", border: "none", color: "#ddeeff", fontSize: "0.83rem", cursor: "pointer", textAlign: "left" }}
+                    className="premium-country-option"
+                    style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "9px 12px", fontSize: "0.83rem", cursor: "pointer", textAlign: "left" }}
                   >
                     <span>{p.bandera}</span><span>{p.nombre}</span><span style={{ marginLeft: "auto", color: "#556677" }}>{p.codigo}</span>
                   </button>
@@ -465,24 +461,24 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
           <input
             type="tel"
             id="whatsapp"
-            className="form-control"
+            className="form-control premium-input"
             placeholder="Número de WhatsApp"
             value={whatsapp}
             onChange={(e) => setWhatsapp(e.target.value)}
             disabled={disabled}
             style={{ ...inputStyle, height: 54, padding: "1.5rem 14px 0.45rem" }}
           />
-          <label htmlFor="whatsapp" style={{ color: "#8899aa", fontSize: "0.85rem" }}>Número de WhatsApp</label>
+          <label htmlFor="whatsapp">Número de WhatsApp</label>
         </div>
       </div>
 
       <div>
         <div style={{ fontSize: "0.85rem", color: "#ccd", marginBottom: 8, fontWeight: 600 }}>¿Has operado con criptomonedas?</div>
         <div style={{ display: "flex", gap: 10 }}>
-          <button type="button" disabled={disabled} onClick={() => setOperadoCriptos(true)} style={toggleBtnStyle(operadoCriptos === true)}>
+          <button type="button" className="premium-choice" disabled={disabled} onClick={() => setOperadoCriptos(true)} style={toggleBtnStyle(operadoCriptos === true)}>
             <span>✓</span> Sí
           </button>
-          <button type="button" disabled={disabled} onClick={() => setOperadoCriptos(false)} style={toggleBtnStyle(operadoCriptos === false)}>
+          <button type="button" className="premium-choice" disabled={disabled} onClick={() => setOperadoCriptos(false)} style={toggleBtnStyle(operadoCriptos === false)}>
             <span>○</span> No
           </button>
         </div>
@@ -495,6 +491,7 @@ function FormFields({ nombre, setNombre, pais, setPais, paisOpen, setPaisOpen, b
             <button
               key={n}
               type="button"
+              className="premium-choice"
               disabled={disabled}
               onClick={() => setNivel(n)}
               style={toggleBtnStyle(nivel === n)}
