@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import "./admin.css";
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -63,26 +64,27 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050a0e", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif" }}>
+    <div className="admin-page admin-login" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Inter',sans-serif" }}>
       <div style={{ width: "100%", maxWidth: 380, padding: "0 20px" }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg,#003a7a,#005533)", border: "2px solid rgba(0,200,100,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", boxShadow: "0 0 24px rgba(0,150,255,0.2)", fontSize: "1.6rem" }}>🌐</div>
+          <div className="admin-logo" style={{ width: 60, height: 60, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", fontSize: "1.6rem" }}>🌐</div>
           <div style={{ fontSize: "1.1rem", fontWeight: 800, letterSpacing: 2, background: "linear-gradient(90deg,#fff 40%,#00e87a)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>GLOBAL FLOW</div>
-          <div style={{ color: "#556677", fontSize: "0.75rem", marginTop: 4 }}>Panel de Administración</div>
+          <div className="admin-muted" style={{ fontSize: "0.75rem", marginTop: 4 }}>Panel de Administración</div>
         </div>
-        <form onSubmit={handleSubmit} style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 14, padding: "28px 24px" }}>
+        <form className="admin-surface admin-login-card" onSubmit={handleSubmit} style={{ borderRadius: 14, padding: "28px 24px" }}>
           <h2 style={{ color: "#fff", fontWeight: 700, fontSize: "1.1rem", marginBottom: 6, textAlign: "center" }}>Acceso Restringido</h2>
-          <p style={{ color: "#8899aa", fontSize: "0.82rem", textAlign: "center", marginBottom: 20 }}>Ingresa la contraseña de administrador</p>
+          <p className="admin-muted" style={{ fontSize: "0.82rem", textAlign: "center", marginBottom: 20 }}>Ingresa la contraseña de administrador</p>
           <div style={{ position: "relative", marginBottom: 14 }}>
-            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#556677" }}>🔑</span>
-            <input type="password" placeholder="Contraseña" value={pw} onChange={(e) => { setPw(e.target.value); setError(false); }} autoComplete="current-password"
-              style={{ width: "100%", background: "#0a1520", border: `1px solid ${error ? "rgba(220,60,60,0.5)" : "rgba(255,255,255,0.08)"}`, borderRadius: 8, color: "#ddeeff", padding: "12px 14px 12px 36px", fontSize: "0.9rem", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} autoFocus />
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#93a99b", pointerEvents: "none" }}>🔑</span>
+            <input type="password" aria-label="Contraseña" placeholder="Contraseña" value={pw} onChange={(e) => { setPw(e.target.value); setError(false); }} autoComplete="current-password"
+              className={`admin-control${error ? " admin-control-error" : ""}`}
+              style={{ width: "100%", borderRadius: 8, padding: "12px 14px 12px 36px", fontSize: "0.9rem", boxSizing: "border-box", fontFamily: "inherit" }} autoFocus />
           </div>
           {error && <div style={{ background: "rgba(220,50,50,0.12)", border: "1px solid rgba(220,50,50,0.3)", borderRadius: 7, padding: "8px 12px", fontSize: "0.82rem", color: "#ff8888", marginBottom: 14, textAlign: "center" }}>Contraseña incorrecta</div>}
-          <button type="submit" style={{ width: "100%", padding: "13px", background: "linear-gradient(90deg,#00c060,#00e87a)", border: "none", borderRadius: 9, color: "#fff", fontWeight: 800, fontSize: "0.95rem", cursor: "pointer", letterSpacing: 0.5, fontFamily: "inherit" }}>Entrar →</button>
+          <button type="submit" className="admin-primary" style={{ width: "100%", padding: "13px", borderRadius: 9, fontWeight: 800, fontSize: "0.95rem", cursor: "pointer", letterSpacing: 0.5, fontFamily: "inherit" }}>Entrar →</button>
         </form>
-        <p style={{ textAlign: "center", marginTop: 20, color: "#334455", fontSize: "0.75rem" }}>
-          ← <a href="/landing-page/" style={{ color: "#445566", textDecoration: "none" }}>Volver a la landing</a>
+        <p className="admin-muted" style={{ textAlign: "center", marginTop: 20, fontSize: "0.75rem" }}>
+          ← <a href="/" className="admin-link" style={{ textDecoration: "none" }}>Volver a la landing</a>
         </p>
       </div>
     </div>
@@ -92,11 +94,11 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
 // ── Stat card ──────────────────────────────────────────────────────────────
 function StatCard({ icon, label, value, sub }: { icon: string; label: string; value: string | number; sub?: string }) {
   return (
-    <div style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "18px 20px", flex: 1, minWidth: 130 }}>
+    <div className="admin-surface" style={{ borderRadius: 12, padding: "18px 20px", flex: 1, minWidth: 130 }}>
       <div style={{ fontSize: "1.4rem", marginBottom: 6 }}>{icon}</div>
-      <div style={{ color: "#8899aa", fontSize: "0.72rem", letterSpacing: 0.5, marginBottom: 4, textTransform: "uppercase" }}>{label}</div>
+      <div className="admin-muted" style={{ fontSize: "0.72rem", letterSpacing: 0.5, marginBottom: 4, textTransform: "uppercase" }}>{label}</div>
       <div style={{ color: GREEN, fontWeight: 800, fontSize: "1.5rem", lineHeight: 1 }}>{value}</div>
-      {sub && <div style={{ color: "#556677", fontSize: "0.72rem", marginTop: 4 }}>{sub}</div>}
+      {sub && <div className="admin-muted" style={{ fontSize: "0.72rem", marginTop: 4 }}>{sub}</div>}
     </div>
   );
 }
@@ -104,8 +106,8 @@ function StatCard({ icon, label, value, sub }: { icon: string; label: string; va
 // ── Chart card wrapper ─────────────────────────────────────────────────────
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "20px 18px" }}>
-      <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#aabbcc", letterSpacing: 0.5, marginBottom: 16, textTransform: "uppercase" }}>{title}</div>
+    <div className="admin-surface" style={{ borderRadius: 12, padding: "20px 18px" }}>
+      <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "#f7faf8", letterSpacing: 0.5, marginBottom: 16, textTransform: "uppercase" }}>{title}</div>
       {children}
     </div>
   );
@@ -115,8 +117,8 @@ function ChartCard({ title, children }: { title: string; children: React.ReactNo
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: "#0a1520", border: "1px solid rgba(0,200,100,0.2)", borderRadius: 8, padding: "8px 14px", fontSize: "0.82rem", color: "#ddeeff" }}>
-      {label && <div style={{ color: "#8899aa", marginBottom: 4 }}>{label}</div>}
+    <div style={{ background: "#14191a", border: "1px solid rgba(0,232,122,0.34)", borderRadius: 8, padding: "8px 14px", fontSize: "0.82rem", color: "#f7faf8" }}>
+      {label && <div style={{ color: "#aebeb4", marginBottom: 4 }}>{label}</div>}
       {payload.map((p: any) => (
         <div key={p.name} style={{ color: p.color ?? GREEN, fontWeight: 700 }}>
           {p.name}: <span style={{ color: "#fff" }}>{p.value}</span>
@@ -268,10 +270,10 @@ export default function Admin() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#050a0e", fontFamily: "'Inter',sans-serif", color: "#fff" }}>
+    <div className="admin-page admin-dashboard" style={{ minHeight: "100vh", fontFamily: "'Inter',sans-serif" }}>
       {/* BG glow */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", overflow: "hidden", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "-10%", left: "-10%", width: 600, height: 600, background: "radial-gradient(circle,rgba(0,80,180,0.12) 0%,transparent 70%)", borderRadius: "50%" }} />
+        <div style={{ position: "absolute", top: "-10%", left: "-10%", width: 600, height: 600, background: "radial-gradient(circle,rgba(0,232,122,0.07) 0%,transparent 70%)", borderRadius: "50%" }} />
       </div>
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", padding: "28px 16px 60px" }}>
@@ -279,15 +281,15 @@ export default function Admin() {
         {/* ── HEADER ── */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 42, height: 42, borderRadius: "50%", background: "linear-gradient(135deg,#003a7a,#005533)", border: "1px solid rgba(0,200,100,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>🌐</div>
+            <div className="admin-logo" style={{ width: 42, height: 42, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>🌐</div>
             <div>
               <div style={{ fontWeight: 800, fontSize: "1.1rem", letterSpacing: 1 }}>GLOBAL FLOW <span style={{ color: GREEN }}>ADMIN</span></div>
-              <div style={{ color: "#556677", fontSize: "0.72rem" }}>Panel de registros</div>
+              <div className="admin-muted" style={{ fontSize: "0.72rem" }}>Panel de registros</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button onClick={fetchLeads} style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, color: "#ccd", padding: "8px 16px", cursor: "pointer", fontSize: "0.83rem", fontFamily: "inherit" }}>🔄 Actualizar</button>
-            <button onClick={() => exportCSV(filtered)} style={{ background: `linear-gradient(90deg,#00c060,${GREEN})`, border: "none", borderRadius: 8, color: "#fff", padding: "8px 16px", cursor: "pointer", fontSize: "0.83rem", fontWeight: 700, fontFamily: "inherit" }}>⬇ Exportar CSV</button>
+            <button className="admin-secondary" onClick={fetchLeads} style={{ borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontSize: "0.83rem", fontFamily: "inherit" }}>🔄 Actualizar</button>
+            <button className="admin-primary" onClick={() => exportCSV(filtered)} style={{ borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontSize: "0.83rem", fontWeight: 700, fontFamily: "inherit" }}>⬇ Exportar CSV</button>
             <button onClick={() => { sessionStorage.removeItem("gf_admin"); setAuthed(false); }} style={{ background: "rgba(220,50,50,0.1)", border: "1px solid rgba(220,50,50,0.2)", borderRadius: 8, color: "#ff8888", padding: "8px 16px", cursor: "pointer", fontSize: "0.83rem", fontFamily: "inherit" }}>Cerrar sesión</button>
           </div>
         </div>
@@ -301,12 +303,12 @@ export default function Admin() {
         </div>
 
         {/* ── TABS ── */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: 4, width: "fit-content" }}>
+        <div className="admin-surface" style={{ display: "flex", gap: 4, marginBottom: 20, borderRadius: 10, padding: 4, width: "fit-content" }}>
           {(["tabla", "graficas"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ padding: "8px 20px", borderRadius: 7, border: "none", fontFamily: "inherit", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
-                background: tab === t ? `linear-gradient(90deg,#00c060,${GREEN})` : "transparent",
-                color: tab === t ? "#fff" : "#8899aa" }}>
+              className={tab === t ? "admin-primary admin-tab" : "admin-tab"}
+              aria-pressed={tab === t}
+              style={{ padding: "8px 20px", borderRadius: 7, border: "none", fontFamily: "inherit", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
               {t === "tabla" ? "📋 Tabla" : "📈 Gráficas"}
             </button>
           ))}
@@ -316,30 +318,30 @@ export default function Admin() {
         {tab === "tabla" && (
           <>
             {/* Filters */}
-            <div style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "16px 18px", marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <div className="admin-surface" style={{ borderRadius: 12, padding: "16px 18px", marginBottom: 16, display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ position: "relative", flex: "1 1 200px" }}>
-                <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#556677", fontSize: "0.85rem" }}>🔍</span>
-                <input placeholder="Buscar por nombre, WhatsApp o país..." value={search} onChange={(e) => setSearch(e.target.value)}
-                  style={{ width: "100%", background: "#0a1520", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, color: "#ddeeff", padding: "9px 12px 9px 32px", fontSize: "0.83rem", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                <span style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "#93a99b", fontSize: "0.85rem", pointerEvents: "none" }}>🔍</span>
+                <input aria-label="Buscar registros" placeholder="Buscar por nombre, WhatsApp o país..." value={search} onChange={(e) => setSearch(e.target.value)}
+                  className="admin-control" style={{ width: "100%", borderRadius: 7, padding: "9px 12px 9px 32px", fontSize: "0.83rem", boxSizing: "border-box", fontFamily: "inherit" }} />
               </div>
-              <select value={filterNivel} onChange={(e) => setFilterNivel(e.target.value)}
-                style={{ background: "#0a1520", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, color: "#ddeeff", padding: "9px 12px", fontSize: "0.83rem", outline: "none", cursor: "pointer", fontFamily: "inherit" }}>
+              <select aria-label="Filtrar por nivel" value={filterNivel} onChange={(e) => setFilterNivel(e.target.value)}
+                className="admin-control" style={{ borderRadius: 7, padding: "9px 12px", fontSize: "0.83rem", cursor: "pointer", fontFamily: "inherit" }}>
                 <option value="todos">Todos los niveles</option>
                 <option value="principiante">Principiante</option>
                 <option value="intermedio">Intermedio</option>
                 <option value="avanzado">Avanzado</option>
               </select>
-              <select value={filterCriptos} onChange={(e) => setFilterCriptos(e.target.value)}
-                style={{ background: "#0a1520", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, color: "#ddeeff", padding: "9px 12px", fontSize: "0.83rem", outline: "none", cursor: "pointer", fontFamily: "inherit" }}>
+              <select aria-label="Filtrar por experiencia cripto" value={filterCriptos} onChange={(e) => setFilterCriptos(e.target.value)}
+                className="admin-control" style={{ borderRadius: 7, padding: "9px 12px", fontSize: "0.83rem", cursor: "pointer", fontFamily: "inherit" }}>
                 <option value="todos">Con/sin criptos</option>
                 <option value="si">Con experiencia</option>
                 <option value="no">Sin experiencia</option>
               </select>
-              <button onClick={() => setSortDesc(!sortDesc)}
-                style={{ background: "#0a1520", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 7, color: "#ccd", padding: "9px 14px", fontSize: "0.83rem", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+              <button className="admin-secondary" onClick={() => setSortDesc(!sortDesc)}
+                style={{ borderRadius: 7, padding: "9px 14px", fontSize: "0.83rem", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
                 {sortDesc ? "⬇ Más recientes" : "⬆ Más antiguos"}
               </button>
-              <span style={{ color: "#556677", fontSize: "0.78rem", marginLeft: "auto" }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
+              <span className="admin-muted" style={{ fontSize: "0.78rem", marginLeft: "auto" }}>{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
               {someSelected && (
                 <button
                   onClick={deleteSelected}
@@ -352,21 +354,21 @@ export default function Admin() {
             </div>
 
             {loading ? (
-              <div style={{ textAlign: "center", padding: "60px 0", color: "#8899aa" }}><div style={{ fontSize: "2rem", marginBottom: 12 }}>⏳</div>Cargando registros...</div>
+              <div style={{ textAlign: "center", padding: "60px 0", color: "#aebeb4" }}><div style={{ fontSize: "2rem", marginBottom: 12 }}>⏳</div>Cargando registros...</div>
             ) : error ? (
               <div style={{ background: "rgba(220,50,50,0.1)", border: "1px solid rgba(220,50,50,0.2)", borderRadius: 10, padding: "24px", textAlign: "center", color: "#ff8888" }}><div style={{ fontSize: "1.5rem", marginBottom: 8 }}>⚠️</div>{error}</div>
             ) : filtered.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "60px 0", color: "#8899aa" }}>
+              <div style={{ textAlign: "center", padding: "60px 0", color: "#aebeb4" }}>
                 <div style={{ fontSize: "2.5rem", marginBottom: 12 }}>{leads.length === 0 ? "📭" : "🔍"}</div>
                 <div style={{ fontWeight: 600, marginBottom: 6 }}>{leads.length === 0 ? "Aún no hay registros" : "Sin resultados"}</div>
                 <div style={{ fontSize: "0.82rem" }}>{leads.length === 0 ? "Los leads aparecerán aquí cuando alguien complete el formulario." : "Prueba con otros filtros."}</div>
               </div>
             ) : (
-              <div style={{ background: "#0f1923", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, overflow: "hidden" }}>
+              <div className="admin-surface admin-table" style={{ borderRadius: 12, overflow: "hidden" }}>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.83rem" }}>
-                    <thead>
-                      <tr style={{ background: "#0a1520", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <thead>
+                        <tr style={{ background: "#0b1113", borderBottom: "1px solid rgba(0,232,122,0.14)" }}>
                         <th style={{ padding: "12px 14px", textAlign: "left", color: "#8899aa", fontWeight: 600 }}>
                           <input
                             type="checkbox"
@@ -394,9 +396,9 @@ export default function Admin() {
                               style={{ accentColor: GREEN, cursor: "pointer", width: 15, height: 15 }}
                             />
                           </td>
-                          <td style={{ padding: "11px 14px", color: "#556677" }}>{lead.id}</td>
+                          <td style={{ padding: "11px 14px", color: "#aebeb4" }}>{lead.id}</td>
                           <td style={{ padding: "11px 14px", color: "#fff", fontWeight: 600 }}>{lead.nombre}</td>
-                          <td style={{ padding: "11px 14px", color: "#ccd", whiteSpace: "nowrap" }}>{lead.pais} <span style={{ color: "#556677" }}>{lead.codigoPais}</span></td>
+                          <td style={{ padding: "11px 14px", color: "#dbe9de", whiteSpace: "nowrap" }}>{lead.pais} <span style={{ color: "#aebeb4" }}>{lead.codigoPais}</span></td>
                           <td style={{ padding: "11px 14px" }}>
                             <a href={`https://wa.me/${lead.codigoPais.replace(/\D/g, "")}${lead.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" style={{ color: GREEN, textDecoration: "none" }}>💬 {lead.whatsapp}</a>
                           </td>
@@ -411,12 +413,12 @@ export default function Admin() {
                           <td style={{ padding: "11px 14px" }}>
                             {lead.fuente
                               ? <span style={{ background: "rgba(153,102,255,0.1)", border: "1px solid rgba(153,102,255,0.25)", borderRadius: 6, padding: "3px 9px", color: "#bb99ff", fontSize: "0.78rem", fontWeight: 600, textTransform: "capitalize", whiteSpace: "nowrap" }}>{lead.fuente}</span>
-                              : <span style={{ color: "#334455", fontSize: "0.78rem" }}>—</span>
+                              : <span style={{ color: "#aebeb4", fontSize: "0.78rem" }}>—</span>
                             }
                           </td>
-                          <td style={{ padding: "11px 14px", color: "#556677", whiteSpace: "nowrap", fontSize: "0.78rem" }}>
+                          <td style={{ padding: "11px 14px", color: "#aebeb4", whiteSpace: "nowrap", fontSize: "0.78rem" }}>
                             {new Date(lead.createdAt).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })}
-                            <br /><span style={{ color: "#334455" }}>{new Date(lead.createdAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</span>
+                            <br /><span style={{ color: "#aebeb4" }}>{new Date(lead.createdAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</span>
                           </td>
                           <td style={{ padding: "11px 14px" }}>
                             <button
@@ -440,7 +442,7 @@ export default function Admin() {
         {tab === "graficas" && (
           <>
             {leads.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#8899aa" }}>
+              <div style={{ textAlign: "center", padding: "80px 0", color: "#aebeb4" }}>
                 <div style={{ fontSize: "3rem", marginBottom: 16 }}>📭</div>
                 <div style={{ fontWeight: 600, marginBottom: 8 }}>Aún no hay registros</div>
                 <div style={{ fontSize: "0.82rem" }}>Las gráficas aparecerán cuando haya leads guardados.</div>
@@ -457,7 +459,7 @@ export default function Admin() {
                         <Cell fill="#1e2a3a" stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend formatter={(value) => <span style={{ color: "#8899aa", fontSize: "0.8rem" }}>{value}</span>} />
+                      <Legend formatter={(value) => <span style={{ color: "#aebeb4", fontSize: "0.8rem" }}>{value}</span>} />
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartCard>
@@ -467,8 +469,8 @@ export default function Admin() {
                   <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={nivelData} barSize={36}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                      <XAxis dataKey="name" tick={{ fill: "#8899aa", fontSize: 12 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fill: "#556677", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <XAxis dataKey="name" tick={{ fill: "#aebeb4", fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: "#aebeb4", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                       <Bar dataKey="value" name="Leads" radius={[6, 6, 0, 0]}>
                         {nivelData.map((entry) => <Cell key={entry.name} fill={entry.fill} />)}
@@ -483,8 +485,8 @@ export default function Admin() {
                     <ResponsiveContainer width="100%" height={240}>
                       <BarChart data={paisData} layout="vertical" barSize={20}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                        <XAxis type="number" tick={{ fill: "#556677", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                        <YAxis dataKey="name" type="category" tick={{ fill: "#8899aa", fontSize: 11 }} axisLine={false} tickLine={false} width={90} />
+                        <XAxis type="number" tick={{ fill: "#aebeb4", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <YAxis dataKey="name" type="category" tick={{ fill: "#aebeb4", fontSize: 11 }} axisLine={false} tickLine={false} width={90} />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                         <Bar dataKey="value" name="Leads" fill={BLUE} radius={[0, 6, 6, 0]} />
                       </BarChart>
@@ -498,8 +500,8 @@ export default function Admin() {
                     <ResponsiveContainer width="100%" height={240}>
                       <BarChart data={tendenciaData} barSize={24}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                        <XAxis dataKey="name" tick={{ fill: "#8899aa", fontSize: 11 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fill: "#556677", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                        <XAxis dataKey="name" tick={{ fill: "#aebeb4", fontSize: 11 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fill: "#aebeb4", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                         <Bar dataKey="value" name="Registros" fill={ORANGE} radius={[6, 6, 0, 0]} />
                       </BarChart>
