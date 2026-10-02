@@ -1,1 +1,2 @@
 - [Replit PostgreSQL + autoscale](replit-pg-autoscale.md) — internal `helium` host unreachable from Cloud Run; must use Reserved VM deployment.
+- [Pruebas del Pixel](pixel-testing.md) — interceptar conversiones sintéticas durante las pruebas para no contaminar los datos de campañas.

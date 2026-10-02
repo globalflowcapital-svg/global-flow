@@ -8,9 +8,14 @@ declare global {
 }
 
 function trackMetaLead(): void {
+  if (typeof window.fbq !== "function") {
+    console.warn("[Meta Pixel] No se pudo enviar Lead: el Pixel no está disponible. Revisa los bloqueadores y la carga de fbevents.js.");
+    return;
+  }
   try {
-    window.fbq?.("track", "Lead");
-  } catch {
+    window.fbq("track", "Lead");
+  } catch (error) {
+    console.error("[Meta Pixel] Error al enviar Lead.", error);
     // Analytics must never interrupt the form action.
   }
 }
