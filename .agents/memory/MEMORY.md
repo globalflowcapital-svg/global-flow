@@ -2,3 +2,4 @@
 - [Pruebas del Pixel](pixel-testing.md) — interceptar conversiones sintéticas durante las pruebas para no contaminar los datos de campañas.
 - [Autorización de GitHub](github-export-auth.md) — una conexión marcada activa no garantiza autenticación de GitHub CLI; confirmar acceso antes de anunciar una exportación.
 - [Hostinger y PostgreSQL](hostinger-postgresql.md) — el asistente Supabase de hPanel no sustituye la URI PostgreSQL privada; comprobar conectividad IPv4.
+- [GoDaddy Node.js Hosting](godaddy-nodejs-hosting.md) — producto administrado con importación ZIP y secretos; no confundirlo con hosting PHP/cPanel o VPS.

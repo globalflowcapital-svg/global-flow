@@ -49,3 +49,31 @@ mtime_ms = 1791895013292
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:70cf25a1-8e01-44dd-bc92-45e41b3bd6b3/07dcb99f-439a-49b5-8c2a-51ad1bff07c8/2f6be13b-7d34-4f64-8df7-8fcec3e1b2fd"
 storage_version_token = "1791895048370582"
 content_type = "text/html"
+
+[[outputs]]
+id = "Hw-0zmSUKuINZ5WtysnSh"
+uri = "file://generated-artifacts/global-flow-godaddy.zip"
+type = "unspecified"
+title = "Global Flow — ZIP para GoDaddy Node.js Hosting"
+description = "Paquete de 49,25 MB preparado para la importación ZIP de GoDaddy: servidor, sitios compilados, recursos, código fuente y esquema PostgreSQL. Sin secretos ni contactos."
+logical_id = "4561b8b7-36b7-47c8-b7d8-bfccea2b8a4a"
+content_hash = "sha256:2ca42a12729107f4be32e317463eeea249322337bc74078f729266892ec45d30"
+size = 51638798
+mtime_ms = 1791924420787
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:70cf25a1-8e01-44dd-bc92-45e41b3bd6b3/4561b8b7-36b7-47c8-b7d8-bfccea2b8a4a/5f532ccc-0693-4ff6-8616-4dafce9628e0"
+storage_version_token = "1791924901642165"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "26pBcycklrECFxFEUaReS"
+uri = "file://generated-artifacts/guia-godaddy-global-flow.html"
+type = "html"
+title = "Guía de subida y configuración en GoDaddy"
+description = "Pasos en español para cargar el ZIP, configurar secretos privados, conectar PostgreSQL, probar la vista previa y publicar."
+logical_id = "8b8f4e39-e833-40b4-b230-7c0d2a6f7e78"
+content_hash = "sha256:5327fa007f95586fa34d9384183e61bf687f957e11efdaf6620bb24ad8c97fd7"
+size = 3046
+mtime_ms = 1791924415615
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:70cf25a1-8e01-44dd-bc92-45e41b3bd6b3/8b8f4e39-e833-40b4-b230-7c0d2a6f7e78/ca66111e-16f5-4aa6-84d8-892afcab2c8e"
+storage_version_token = "1791924902421669"
+content_type = "text/html"
