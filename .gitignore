@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Generated migration packages (may contain large media)
+/generated-artifacts/

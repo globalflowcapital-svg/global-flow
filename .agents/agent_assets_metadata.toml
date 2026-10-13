@@ -21,3 +21,31 @@ uri = "file://globalflow-landing.tar.gz"
 type = "unspecified"
 title = "Global Flow — HTML editable (.tar.gz)"
 logical_id = "d907f77a-87df-494e-9494-747d7dc7b040"
+
+[[outputs]]
+id = "pT79HrErsoyefdaRtH7zI"
+uri = "file://generated-artifacts/global-flow-hostinger.zip"
+type = "unspecified"
+title = "Global Flow — paquete para Hostinger"
+description = "ZIP de 49,25 MB con servidor Node.js, sitios compilados, recursos, código fuente completo, esquema PostgreSQL y guía. Sin credenciales ni contactos."
+logical_id = "f1f8ab70-aa68-4169-87a1-fe01fd946262"
+content_hash = "sha256:e01109b18ea2f5972c0e5650c4fe43babadde594cfb2dbd7177c7ef68ba7db60"
+size = 51639037
+mtime_ms = 1791895016403
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:70cf25a1-8e01-44dd-bc92-45e41b3bd6b3/f1f8ab70-aa68-4169-87a1-fe01fd946262/b2573815-d4da-48db-bfa8-e82ab8e184d8"
+storage_version_token = "1791895047731308"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "qTs6p39mjZadBvU9OmvPf"
+uri = "file://generated-artifacts/guia-hostinger-global-flow.html"
+type = "html"
+title = "Guía completa de instalación en Hostinger"
+description = "Instrucciones paso a paso: plan compatible, PostgreSQL, subida del ZIP, variables privadas, dominio, SSL, traslado de contactos y solución de errores."
+logical_id = "07dcb99f-439a-49b5-8c2a-51ad1bff07c8"
+content_hash = "sha256:1dad432c124f78d350029931f6f129cd1e9e85c1e0a23e5716e249be2335346c"
+size = 15483
+mtime_ms = 1791895013292
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:70cf25a1-8e01-44dd-bc92-45e41b3bd6b3/07dcb99f-439a-49b5-8c2a-51ad1bff07c8/2f6be13b-7d34-4f64-8df7-8fcec3e1b2fd"
+storage_version_token = "1791895048370582"
+content_type = "text/html"
